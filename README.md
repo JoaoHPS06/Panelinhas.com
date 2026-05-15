@@ -1,73 +1,87 @@
-# React + TypeScript + Vite
+# 🍳 Panelinhas.com
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> Plataforma de comunidade para lojas locais — descubra, siga e interaja com os seus estabelecimentos favoritos.
+---
 
-Currently, two official plugins are available:
+## 💡 Ideia geral do projeto
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+O **Panelinhas.com** nasceu da ideia de unir o melhor de um marketplace de lojas locais com o engajamento de uma rede social. Assim como aplicativos de delivery conectam clientes a restaurantes, o Panelinhas conecta pessoas a **todo tipo de loja local**, mas com um diferencial: cada loja tem sua própria comunidade.
 
-## React Compiler
+Qualquer visitante pode navegar pelas lojas, ver produtos e ler publicações sem precisar criar uma conta. Quem se cadastra pode seguir lojas, deixar avaliações e participar das comunidades. Donos de loja têm um painel completo para gerenciar seu espaço, publicar ofertas e novidades, cadastrar produtos e responder aos clientes.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 📋 Descrição geral do sistema
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+O sistema é dividido em dois grandes perfis de uso:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+**Visitante (sem login)**
+- Navegar pelo catálogo de lojas com filtros por categoria
+- Visualizar o perfil completo de cada loja: posts, produtos, avaliações e comunidade
+- Buscar lojas e produtos por nome
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+**Usuário cadastrado**
+- Tudo que o visitante pode fazer, mais:
+- Seguir lojas e receber novidades
+- Deixar avaliações com nota e comentário
+- Participar da comunidade de cada loja (perguntas e respostas)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+**Dono de loja**
+- Tudo que o usuário cadastrado pode fazer, mais:
+- Criar e gerenciar o perfil da loja (nome, categoria, descrição, foto)
+- Publicar posts de ofertas, novidades e informações gerais (CRUD completo)
+- Cadastrar, editar e remover produtos do catálogo (CRUD completo)
+- Responder perguntas da comunidade com badge de "Dono"
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Funcionalidades principais
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Módulo | Descrição |
+|---|---|
+| Autenticação | Cadastro, login e logout com JWT |
+| Lojas | CRUD completo do perfil da loja |
+| Posts | Publicação de ofertas e novidades com imagem |
+| Produtos | Catálogo de produtos com nome, descrição e preço |
+| Avaliações | Nota de 1 a 5 estrelas com comentário |
+| Comunidade | Perguntas ao dono com sistema de resposta |
+| Feed público | Listagem e busca de lojas sem necessidade de login |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+
+## 🛠️ Tecnologias utilizadas
+
+**Frontend**
+- React.js — biblioteca para construção da interface
+- Tailwind CSS — estilização
+- Typescript - lógica
+
+**Backend**
+- Python — linguagem principal do servidor
+- Django — framework web
+
+**Banco de dados**
+- SQLite
+---
+
+## 👥 Integrantes da equipe
+
+| Nome | GitHub |
+|---|---|
+| Gabriel Vilas Novas Sousa | https://github.com/vilas000 |
+| João Henrique Pedrosa de Souza | https://github.com/JoaoHPS06 |
+| Leonardo de Souza Gomes | https://github.com/Leonardo2716ba |
+| Marcus Vinícius Araújo | https://github.com/MarcusViniAraujo |
+| Renato Franco Anacleto | https://github.com/RenatoFAnacleto |
+
+---
+
+## 📌 Quadro Kanban
+
+O acompanhamento das tarefas e o planejamento das sprints estão disponíveis no quadro abaixo:
+
+🔗 [Acessar quadro Kanban](https://github.com/users/JoaoHPS06/projects/2)
+
+---
+
+## 📄 Licença
+
+Este projeto foi desenvolvido para fins acadêmicos como trabalho da disciplina de Programação Web.
