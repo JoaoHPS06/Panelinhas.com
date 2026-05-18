@@ -23,6 +23,7 @@ O sistema é dividido em dois grandes perfis de uso:
 **Usuário cadastrado**
 - Tudo que o visitante pode fazer, mais:
 - Seguir lojas e receber novidades
+- Feed personalizado contendo apenas as publicações e ofertas das lojas que ele segue
 - Deixar avaliações com nota e comentário
 - Participar da comunidade de cada loja (perguntas e respostas)
 
@@ -44,6 +45,7 @@ O sistema é dividido em dois grandes perfis de uso:
 | Avaliações | Nota de 1 a 5 estrelas com comentário |
 | Comunidade | Perguntas ao dono com sistema de resposta |
 | Feed público | Listagem e busca de lojas sem necessidade de login |
+| Feed personalizado | Linha do tempo exclusiva para usuários logados com atualizações dos estabelecimentos seguidos |
 
 ---
 
