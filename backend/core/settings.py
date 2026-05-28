@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,10 +42,13 @@ INSTALLED_APPS = [
     "comunidade",
     "contas",
     "rest_framework",
+    'rest_framework_simplejwt',
+    'corsheaders',
 ]       
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -122,3 +126,25 @@ STATIC_URL = 'static/'
 
 # App 'contas', modelo 'usuarioCustomizado'
 AUTH_USER_MODEL = 'contas.usuarioCustomizado'
+
+
+# Configurações do SimpleJWT
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+# Tempo de expiração dos tokens
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # O token principal expira em 1 hora
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),    # O token de renovação dura 7 dias
+    'AUTH_HEADER_TYPES': ('Bearer',),               # O frontend enviará "Bearer <token>"
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]

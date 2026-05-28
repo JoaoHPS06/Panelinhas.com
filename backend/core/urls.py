@@ -16,7 +16,17 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # Rota para fazer Login (Gera os tokens inicial)
+    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    
+    # Rota para renovar o token expirado
+    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
