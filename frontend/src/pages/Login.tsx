@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import usericon from "../assets/usericon.svg";
+import logo from "../assets/logo.png";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -29,8 +29,7 @@ export const Login = () => {
         return;
       }
 
-      // Salva o usuário logado para uso no Dashboard
-      localStorage.setItem("promogames_user", JSON.stringify(data));
+      localStorage.setItem("Panelinha_user", JSON.stringify(data));
       navigate("/dashboard");
     } catch {
       setErro("Não foi possível conectar ao servidor.");
@@ -39,65 +38,97 @@ export const Login = () => {
     }
   }
   return (
-    <div className="flex flex-col items-center justify-start p-4  pt-32">
-      <div className="w-full max-w-sm flex flex-col items-center gap-5 p-8 rounded-xl border border-[var(--border)] shadow-[var(--shadow)] bg-[var(--bg)]">
-        <img
-          className="w-20 h-20 bg-[#D85A30]"
-          src={usericon}
-          alt="Logo do PromoGames"
-        />
-
-        <h1 className="text-2xl font-bold text-[var(--text-h)]">Entrar</h1>
-
-        {erro && (
-          <div
-            className="w-full px-4 py-3 rounded-md text-sm font-medium text-center"
-            style={{
-              background: "rgba(239,68,68,0.1)",
-              border: "1px solid rgba(239,68,68,0.35)",
-              color: "#f87171",
-            }}
-          >
-            {erro}
+    <div className="min-h-screen flex">
+      <div className="w-full flex">
+        <div className="hidden md:flex w-5/12 bg-[#D85A30] flex-col items-center justify-center gap-6 p-10">
+          <img src={logo} alt="Logo Panelinhas" className="h-40 w-auto" />
+          <div className="text-center">
+            <p className="text-white text-lg font-semibold">Panelinhas</p>
+            <p className="text-white/60 text-sm mt-1 leading-relaxed">
+              Conectando você aos melhores comércios locais
+            </p>
           </div>
-        )}
+          <ul className="mt-2 flex flex-col gap-3 w-full ml-56">
+            <li className="flex items-center gap-3 text-white/80 text-sm">
+              <span>📍</span>
+              <span>Comércios perto de você</span>
+            </li>
+            <li className="flex items-center gap-3 text-white/80 text-sm">
+              <span>⭐</span>
+              <span>Avaliações da comunidade</span>
+            </li>
+            <li className="flex items-center gap-3 text-white/80 text-sm">
+              <span>🕐</span>
+              <span>Horários atualizados</span>
+            </li>
+          </ul>
+        </div>
+        <div className="flex-1 bg-white flex flex-col justify-center p-10">
+          <div className="w-full max-w-sm mx-auto flex flex-col gap-4">
 
-        <input
-          className="w-full p-3 rounded-md border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          placeholder="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
-        />
+            <h1 className="text-2xl font-semibold text-gray-900">Entrar</h1>
 
-        <input
-          className="w-full p-3  rounded-md border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
-          placeholder="Senha"
-          type="password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
-        />
+            {erro && (
+              <div className="w-full px-4 py-3 rounded-lg text-sm font-medium text-center bg-red-500/10 border border-red-400/30 text-red-400">
+                {erro}
+              </div>
+            )}
 
-        <button
-          onClick={handleLogin}
-          disabled={loading}
-          className="w-full bg-[#D85A30] text-white p-3 rounded-md font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? "Entrando..." : "Entrar"}
-        </button>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-500">Email</label>
+                <input
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#D85A30]/40 focus:border-[#D85A30]"
+                  placeholder="seu@email.com"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-gray-500">Senha</label>
+                <input
+                  className="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#D85A30]/40 focus:border-[#D85A30]"
+                  placeholder="••••••••"
+                  type="password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleLogin(e)}
+                />
+              </div>
+            </div>
 
-        <p className="text-sm text-[var(--text)]">
-          Não tem uma conta?{" "}
-          <Link
-            to="/register"
-            className="text-[#D85A30] hover:underline font-semibold"
-          >
-            Cadastrar-se
-          </Link>
-        </p>
+            <button
+              onClick={handleLogin}
+              disabled={loading}
+              className="w-full mt-2 bg-[#D85A30] text-white py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? "Entrando..." : "Entrar"}
+            </button>
+
+            <p className="text-sm text-gray-400 text-center">
+              Não tem uma conta?{" "}
+              <Link to="/register" className="text-[#D85A30] hover:underline font-semibold">
+                Cadastrar-se
+              </Link>
+            </p>
+
+            <div className="border-t border-gray-100 pt-4">
+              <button
+                onClick={() => navigate("/")}
+                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors mx-auto"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+                Voltar para o início
+              </button>
+            </div>
+
+          </div>
+        </div>
       </div>
-    </div>
-  );
+    </div >
+  )
 };
