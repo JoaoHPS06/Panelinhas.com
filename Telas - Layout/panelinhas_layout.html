@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panelinhas.com — Descubra lojas da sua cidade</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ===== RESET & VARS ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --primary:       #D85A30;
+  --primary-light: #FAECE7;
+  --primary-dark:  #993C1D;
+  --sky-top:       #7FC8E8;
+  --sky-bot:       #D8EEF8;
+  --sidewalk:      #C8B89A;
+  --road:          #5E7080;
+  --grass:         #8CC87A;
+  --white:         #FEFAF6;
+  --bg:            #F2EDE6;
+  --text:          #2A1F14;
+  --text-2:        #6B5040;
+  --text-3:        #9E8878;
+  --border:        rgba(0,0,0,0.08);
+  --radius:        12px;
+  --ff-display:    'Fraunces', Georgia, serif;
+  --ff-body:       'Nunito', sans-serif;
+}
+
+body { font-family: var(--ff-body); color: var(--text); background: var(--bg); }
+.screen { display: none; }
+.screen.active { display: block; }
+button { font-family: var(--ff-body); cursor: pointer; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { height: 6px; width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 99px; }
+
+/* ===================== NAVBAR ===================== */
+.navbar {
+  position: sticky; top: 0; z-index: 200;
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  height: 64px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 28px;
+  gap: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+}
+
+/* Left: HOME + EXPLORE */
+.nav-left { display: flex; align-items: center; gap: 4px; }
+.nav-link {
+  padding: 6px 15px; border-radius: 22px;
+  border: none; background: transparent;
+  font-size: 12.5px; font-weight: 800;
+  letter-spacing: .6px; text-transform: uppercase;
+  color: var(--text-2); transition: all .18s;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--primary-light); color: var(--primary);
+}
+
+/* Center: Logo circle */
+.nav-center { display: flex; justify-content: center; }
+.logo-circle {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--primary);
+  border: 3px solid var(--primary-dark);
+  box-shadow: 0 4px 16px rgba(216,90,48,.35);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer; transition: transform .2s;
+  text-decoration: none;
+}
+.logo-circle:hover { transform: scale(1.07) rotate(-3deg); }
+.logo-circle span:first-child {
+  font-family: var(--ff-display); font-size: 10px; font-weight: 700;
+  color: #FFE8B0; letter-spacing: .5px; line-height: 1.1;
+}
+.logo-circle span:last-child {
+  font-size: 18px; line-height: 1;
+}
+
+/* Right: Search + Login */
+.nav-right {
+  display: flex; align-items: center;
+  justify-content: flex-end; gap: 10px;
+}
+.nav-search {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 24px; padding: 7px 14px;
+  max-width: 250px; flex: 1;
+  transition: border-color .2s, box-shadow .2s;
+}
+.nav-search:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(216,90,48,.12);
+}
+.nav-search svg { color: var(--text-3); flex-shrink: 0; }
+.nav-search input {
+  border: none; background: transparent; width: 100%; outline: none;
+  font-family: var(--ff-body); font-size: 13px; color: var(--text);
+}
+.nav-search input::placeholder { color: var(--text-3); }
+.btn-login {
+  padding: 7px 18px; border-radius: 22px;
+  border: 1.5px solid var(--primary); background: transparent;
+  color: var(--primary); font-size: 13px; font-weight: 800;
+  white-space: nowrap; transition: all .18s;
+}
+.btn-login:hover { background: var(--primary); color: #fff; }
+
+/* ===================== CAROUSEL ===================== */
+.carousel-wrap {
+  width: 100%; overflow: hidden; position: relative;
+  line-height: 0;
+}
+.carousel-track {
+  display: flex;
+  transition: transform .55s cubic-bezier(.4,0,.2,1);
+}
+.carousel-slide {
+  min-width: 100%; height: 300px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.c1 { background: linear-gradient(135deg, #BF4A22 0%, #E87A50 50%, #F2A07A 100%); }
+.c2 { background: linear-gradient(135deg, #1F7A6A 0%, #3BBAAA 50%, #72D8CA 100%); }
+.c3 { background: linear-gradient(135deg, #6040A8 0%, #9468D8 50%, #C098F0 100%); }
+.c4 { background: linear-gradient(135deg, #A87820 0%, #D8B040 50%, #F0D068 100%); }
+
+.slide-deco-bg {
+  position: absolute; font-size: 200px; opacity: .07;
+  right: -30px; bottom: -30px; line-height: 1; user-select: none;
+}
+.slide-deco-sm {
+  position: absolute; font-size: 70px; opacity: .1;
+  left: 30px; top: 20px; line-height: 1; user-select: none;
+}
+
+.slide-content {
+  position: relative; z-index: 2; text-align: center;
+  color: #fff; padding: 0 60px; max-width: 600px;
+}
+.slide-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,.18); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.3); border-radius: 22px;
+  padding: 4px 13px; font-size: 11px; font-weight: 800;
+  letter-spacing: .8px; text-transform: uppercase; margin-bottom: 12px;
+}
+.slide-title {
+  font-family: var(--ff-display); font-size: 38px; font-weight: 700;
+  line-height: 1.15; margin-bottom: 8px;
+  text-shadow: 0 2px 20px rgba(0,0,0,.2);
+}
+.slide-sub { font-size: 15px; opacity: .85; margin-bottom: 22px; }
+.slide-cta {
+  display: inline-block; background: #fff;
+  color: var(--text); font-size: 13px; font-weight: 800;
+  padding: 10px 26px; border-radius: 26px; border: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,.15);
+  transition: transform .2s, box-shadow .2s;
+}
+.slide-cta:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.2); }
+
+/* Carousel arrows */
+.c-btn {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  z-index: 10; width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(255,255,255,.22); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.35); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; transition: background .2s;
+}
+.c-btn:hover { background: rgba(255,255,255,.38); }
+.c-prev { left: 18px; }
+.c-next { right: 18px; }
+
+/* Dots */
+.c-dots {
+  position: absolute; bottom: 16px; left: 50%;
+  transform: translateX(-50%); display: flex; gap: 6px; z-index: 10;
+}
+.c-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,.4); transition: all .22s; cursor: pointer;
+}
+.c-dot.active { width: 24px; border-radius: 5px; background: #fff; }
+
+/* ===================== CATEGORY CHIPS ===================== */
+.cat-bar {
+  background: var(--white); padding: 14px 28px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.cat-label {
+  font-size: 11px; font-weight: 800; letter-spacing: 1.2px;
+  text-transform: uppercase; color: var(--text-3); white-space: nowrap;
+}
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  padding: 7px 16px; border-radius: 24px;
+  border: 1.5px solid var(--border);
+  background: var(--bg); color: var(--text-2);
+  font-size: 13px; font-weight: 700; transition: all .18s;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.chip:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+.chip.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* ===================== STREET SCENE ===================== */
+.street-wrapper { position: relative; overflow: hidden; }
+
+/* Sky layer */
+.sky-layer {
+  background: linear-gradient(180deg, var(--sky-top) 0%, #B8E0F5 40%, var(--sky-bot) 100%);
+  position: relative; overflow: hidden;
+  display: flex; align-items: flex-end;
+  min-height: 320px;
+  padding: 0 28px 0;
+}
+
+/* Sun */
+.sun {
+  position: absolute; right: 90px; top: 22px;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: radial-gradient(circle at 40% 40%, #FFE888, #FFB820);
+  box-shadow: 0 0 0 12px rgba(255,210,60,.15), 0 0 0 28px rgba(255,210,60,.07);
+  z-index: 1;
+}
+
+/* Clouds (pure CSS) */
+.cloud {
+  position: absolute; background: rgba(255,255,255,.88);
+  border-radius: 50px; z-index: 1;
+}
+.cloud::before, .cloud::after {
+  content: ''; position: absolute; background: rgba(255,255,255,.88); border-radius: 50%;
+}
+.cloud-a { width: 90px; height: 28px; top: 32px; left: 12%; }
+.cloud-a::before { width: 40px; height: 40px; top: -20px; left: 12px; }
+.cloud-a::after  { width: 32px; height: 32px; top: -14px; left: 40px; }
+.cloud-b { width: 70px; height: 22px; top: 55px; left: 38%; }
+.cloud-b::before { width: 30px; height: 30px; top: -15px; left: 10px; }
+.cloud-b::after  { width: 24px; height: 24px; top: -10px; left: 34px; }
+.cloud-c { width: 110px; height: 34px; top: 28px; left: 65%; }
+.cloud-c::before { width: 50px; height: 50px; top: -26px; left: 15px; }
+.cloud-c::after  { width: 38px; height: 38px; top: -18px; left: 55px; }
+
+/* Background distant buildings silhouette */
+.bg-skyline {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 80px; z-index: 1; pointer-events: none;
+}
+
+/* The scrollable buildings row */
+.buildings-row {
+  display: flex; align-items: flex-end;
+  width: 100%; overflow-x: auto; overflow-y: visible;
+  padding-bottom: 0; gap: 0; position: relative; z-index: 3;
+  scrollbar-width: thin;
+}
+
+/* ---- Individual Building Facade ---- */
+.building {
+  flex: 0 0 174px; display: flex; flex-direction: column;
+  align-items: center; cursor: pointer;
+  transition: transform .24s ease;
+  position: relative; padding: 0 6px;
+}
+.building:hover { transform: translateY(-8px); }
+.building:hover .bwall { box-shadow: -4px 0 16px rgba(0,0,0,.13), 4px 0 16px rgba(0,0,0,.1); }
+
+/* Store sign (above building) */
+.bsign {
+  font-family: var(--ff-display); font-size: 11.5px; font-weight: 700;
+  background: #2A1F14; color: #FFE8A8;
+  padding: 5px 12px; border-radius: 6px 6px 0 0;
+  text-align: center; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  max-width: 162px; width: 162px;
+  letter-spacing: .3px;
+  position: relative; z-index: 2;
+}
+/* Sign pole */
+.bsign::after {
+  content: ''; position: absolute;
+  bottom: -8px; left: 50%; transform: translateX(-50%);
+  width: 2px; height: 8px; background: #2A1F14;
+}
+
+/* Building body */
+.bwall {
+  width: 162px; border-radius: 6px 6px 0 0;
+  display: flex; flex-direction: column;
+  overflow: hidden; margin-top: 8px;
+  box-shadow: -2px 0 8px rgba(0,0,0,.08), 2px 0 8px rgba(0,0,0,.06);
+  transition: box-shadow .24s;
+  position: relative;
+}
+
+/* Upper section (windows) */
+.bwall-top {
+  padding: 12px 12px 6px;
+  display: flex; justify-content: center; gap: 8px;
+}
+.bwin {
+  width: 26px; height: 28px; border-radius: 3px 3px 0 0;
+  border: 2px solid rgba(0,0,0,.14);
+  background: rgba(255,255,255,.55);
+  position: relative; overflow: hidden;
+  flex-shrink: 0;
+}
+.bwin::before {
+  content: ''; position: absolute;
+  top: 0; left: 50%; width: 1px; height: 100%;
+  background: rgba(0,0,0,.1);
+}
+.bwin::after {
+  content: ''; position: absolute;
+  left: 0; top: 50%; width: 100%; height: 1px;
+  background: rgba(0,0,0,.1);
+}
+/* Window glow (light on) */
+.bwin.lit { background: rgba(255,240,160,.7); }
+
+/* Awning */
+.bawning {
+  height: 22px; margin: 0 -1px;
+  position: relative; overflow: hidden;
+  flex-shrink: 0;
+}
+.bawning::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 7px;
+  background: repeating-linear-gradient(90deg,
+    rgba(0,0,0,.1) 0, rgba(0,0,0,.1) 13px,
+    transparent 13px, transparent 26px);
+}
+
+/* Lower (door zone) */
+.bwall-bot {
+  padding: 8px 12px 0;
+  display: flex; align-items: flex-end; justify-content: center; gap: 10px;
+  flex: 1;
+}
+.bdoor {
+  width: 34px; height: 46px; border-radius: 4px 4px 0 0;
+  border: 2px solid rgba(0,0,0,.18);
+  background: rgba(0,0,0,.08);
+  position: relative; flex-shrink: 0;
+}
+.bdoor::after {
+  content: '⬤'; position: absolute;
+  right: 3px; top: 50%; transform: translateY(-50%);
+  font-size: 4px; color: rgba(0,0,0,.35);
+}
+.bemoji {
+  font-size: 30px; line-height: 1;
+  margin-bottom: 4px;
+}
+
+/* Store info tag (rating + followers) */
+.binfo {
+  width: 162px; background: var(--white);
+  border-radius: 0 0 4px 4px;
+  padding: 5px 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 10.5px; color: var(--text-2); font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0,0,0,.07);
+  flex-shrink: 0;
+}
+.bstar { color: #C88C10; }
+.bbadge-open  { background: #EAF3DE; color: #3B6D11; padding: 1px 7px; border-radius: 20px; font-size: 10px; font-weight: 800; }
+.bbadge-closed{ background: #F1EFE8; color: #5F5E5A; padding: 1px 7px; border-radius: 20px; font-size: 10px; font-weight: 800; }
+
+/* ---- Sidewalk ---- */
+.sidewalk-layer {
+  background: linear-gradient(180deg, #D4C4A8 0%, #C0B09A 100%);
+  height: 54px; position: relative; z-index: 3;
+  border-top: 3px solid #D8C8B0;
+  display: flex; align-items: center;
+  padding: 0 28px; gap: 0; overflow: hidden;
+}
+.sidewalk-layer::after {
+  content: ''; position: absolute;
+  bottom: 4px; left: 0; right: 0; height: 2px;
+  background: repeating-linear-gradient(90deg,
+    rgba(0,0,0,.08) 0, rgba(0,0,0,.08) 40px,
+    transparent 40px, transparent 64px);
+}
+.trees-row {
+  display: flex; width: 100%; gap: 0;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.tree-spot {
+  flex: 0 0 174px; display: flex; justify-content: center;
+  padding: 0 6px;
+}
+.tree { font-size: 38px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.15)); }
+.lamp { font-size: 30px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,.12)); }
+
+/* ---- Road ---- */
+.road-layer {
+  background: var(--road); height: 36px;
+  position: relative; z-index: 2;
+}
+.road-layer::after {
+  content: ''; position: absolute;
+  top: 50%; transform: translateY(-50%);
+  left: 0; right: 0; height: 4px;
+  background: repeating-linear-gradient(90deg,
+    #FFE066 0, #FFE066 40px, transparent 40px, transparent 80px);
+}
+
+/* ===================== STORE PAGE ===================== */
+.store-page { background: var(--bg); }
+.store-header { background: var(--white); border-bottom: 1px solid var(--border); }
+.store-cover {
+  height: 148px; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 60px; position: relative;
+  background: linear-gradient(135deg, #FAECE7 0%, #FFD8C0 100%);
+}
+.back-btn {
+  position: absolute; top: 14px; left: 18px;
+  background: rgba(254,250,246,.92); border: 1px solid var(--border);
+  border-radius: 22px; padding: 6px 14px; font-size: 12px; font-weight: 800;
+  display: flex; align-items: center; gap: 5px;
+  transition: background .18s;
+}
+.back-btn:hover { background: var(--white); }
+.store-identity {
+  padding: 16px 24px; display: flex;
+  align-items: flex-start; justify-content: space-between; gap: 12px;
+}
+.store-avatar {
+  width: 62px; height: 62px; border-radius: 14px;
+  background: var(--primary-light);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; border: 3px solid var(--white);
+  margin-top: -38px; flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(0,0,0,.12);
+}
+.store-title { font-family: var(--ff-display); font-size: 21px; font-weight: 700; margin-bottom: 2px; }
+.store-sub { font-size: 13px; color: var(--text-2); margin-bottom: 8px; }
+.store-stats { display: flex; gap: 20px; font-size: 12px; color: var(--text-2); }
+.store-stat strong { color: var(--text); font-weight: 800; }
+.btn-follow {
+  padding: 8px 20px; background: var(--primary); color: #fff;
+  border: none; border-radius: 22px; font-size: 13px; font-weight: 800;
+  white-space: nowrap; transition: background .18s; flex-shrink: 0;
+  margin-top: 4px;
+}
+.btn-follow:hover { background: var(--primary-dark); }
+
+/* Tabs */
+.tabs {
+  display: flex; border-bottom: 1px solid var(--border);
+  padding: 0 24px; background: var(--white); overflow-x: auto;
+}
+.tab {
+  padding: 13px 18px; font-size: 13px; font-weight: 700;
+  cursor: pointer; color: var(--text-2);
+  border-bottom: 2.5px solid transparent;
+  transition: all .18s; white-space: nowrap;
+}
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-content { padding: 20px 24px; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Post cards */
+.post-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 14px; overflow: hidden;
+  transition: box-shadow .18s;
+}
+.post-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+.post-img {
+  height: 150px; background: var(--primary-light);
+  display: flex; align-items: center; justify-content: center; font-size: 44px;
+}
+.post-body { padding: 14px 16px; }
+.post-tag {
+  font-size: 10.5px; font-weight: 800; padding: 3px 10px;
+  border-radius: 20px; background: var(--primary-light);
+  color: var(--primary-dark); margin-bottom: 6px;
+  display: inline-block; text-transform: uppercase; letter-spacing: .5px;
+}
+.post-title { font-family: var(--ff-display); font-size: 16px; font-weight: 600; margin-bottom: 5px; }
+.post-text { font-size: 13px; color: var(--text-2); line-height: 1.6; margin-bottom: 10px; }
+.post-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; color: var(--text-3);
+}
+
+/* Products */
+.products-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 14px;
+}
+.product-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+  transition: box-shadow .18s;
+}
+.product-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.08); }
+.product-img {
+  height: 106px; background: #F0EBE4;
+  display: flex; align-items: center; justify-content: center; font-size: 32px;
+}
+.product-info { padding: 12px; }
+.product-name { font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.product-desc { font-size: 12px; color: var(--text-3); margin-bottom: 5px; }
+.product-price { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 10px; }
+.product-add {
+  width: 100%; padding: 7px; background: var(--primary); color: #fff;
+  border: none; border-radius: 8px; font-size: 12px; font-weight: 800;
+  transition: background .18s;
+}
+.product-add:hover { background: var(--primary-dark); }
+
+/* Reviews */
+.review-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+}
+.review-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: #E8D5F5; display: flex;
+  align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: #7048A8; flex-shrink: 0;
+}
+.stars { color: #BA7517; font-size: 14px; letter-spacing: 1px; }
+
+/* Community */
+.comment-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px; margin-bottom: 12px;
+}
+.comment-input-area { display: flex; gap: 10px; margin-bottom: 18px; }
+.comment-input-area input {
+  flex: 1; padding: 9px 16px;
+  border: 1.5px solid var(--border); border-radius: 26px;
+  font-size: 13px; background: var(--bg); color: var(--text);
+  font-family: var(--ff-body); outline: none; transition: border-color .18s;
+}
+.comment-input-area input:focus { border-color: var(--primary); }
+.btn-primary {
+  padding: 8px 18px; background: var(--primary); color: #fff;
+  border: none; border-radius: 26px; font-size: 13px; font-weight: 800;
+  transition: background .18s; white-space: nowrap;
+}
+.btn-primary:hover { background: var(--primary-dark); }
+.owner-badge {
+  font-size: 10px; font-weight: 800;
+  background: var(--primary-light); color: var(--primary-dark);
+  padding: 2px 7px; border-radius: 4px; margin-left: 6px;
+}
+.section-title {
+  font-family: var(--ff-display); font-size: 18px; font-weight: 700; margin-bottom: 16px;
+}
+</style>
+</head>
+<body>
+
+<!-- ========================= HOME SCREEN ========================= -->
+<div id="home" class="screen active">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <button class="nav-link active">Home</button>
+      <button class="nav-link">Explore</button>
+    </div>
+
+    <div class="nav-center">
+      <div class="logo-circle" onclick="">
+        <span>PANELI-</span>
+        <span>🍳</span>
+        <span style="font-family:var(--ff-display);font-size:10px;font-weight:700;color:#FFE8B0;letter-spacing:.5px;">NHAS</span>
+      </div>
+    </div>
+
+    <div class="nav-right">
+      <div class="nav-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" placeholder="Buscar lojas, produtos..." />
+      </div>
+      <button class="btn-login">Fazer login</button>
+    </div>
+  </nav>
+
+  <!-- CAROUSEL -->
+  <section class="carousel-wrap">
+    <div class="carousel-track" id="carouselTrack">
+
+      <div class="carousel-slide c1">
+        <div class="slide-deco-sm">🔥</div>
+        <div class="slide-deco-bg">🍕</div>
+        <div class="slide-content">
+          <div class="slide-pill">🔥 Oferta do Dia</div>
+          <div class="slide-title">Até 40% off<br>em Alimentação</div>
+          <div class="slide-sub">Pizzas, lanches e doces com desconto especial hoje</div>
+          <button class="slide-cta">Ver ofertas →</button>
+        </div>
+      </div>
+
+      <div class="carousel-slide c2">
+        <div class="slide-deco-sm">⭐</div>
+        <div class="slide-deco-bg">🏆</div>
+        <div class="slide-content">
+          <div class="slide-pill">⭐ Mais Visitada</div>
+          <div class="slide-title">Pizzaria do Zé<br>em alta esta semana</div>
+          <div class="slide-sub">4.8 estrelas · 127 seguidores · Aberta agora</div>
+          <button class="slide-cta" onclick="goToStore()">Visitar loja →</button>
+        </div>
+      </div>
+
+      <div class="carousel-slide c3">
+        <div class="slide-deco-sm">🛍️</div>
+        <div class="slide-deco-bg">👗</div>
+        <div class="slide-content">
+          <div class="slide-pill">🛍️ Novidade</div>
+          <div class="slide-title">Nova coleção<br>chegou à Moda Ana</div>
+          <div class="slide-sub">Peças exclusivas de verão — estoque limitado</div>
+          <button class="slide-cta">Conferir →</button>
+        </div>
+      </div>
+
+      <div class="carousel-slide c4">
+        <div class="slide-deco-sm">📰</div>
+        <div class="slide-deco-bg">🗞️</div>
+        <div class="slide-content">
+          <div class="slide-pill">📰 Notícia</div>
+          <div class="slide-title">3 novas lojas<br>abriram no centro!</div>
+          <div class="slide-sub">Padaria artesanal, brechó premium e pet shop chegaram</div>
+          <button class="slide-cta">Saiba mais →</button>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="c-btn c-prev" id="cPrev">‹</button>
+    <button class="c-btn c-next" id="cNext">›</button>
+    <div class="c-dots" id="cDots">
+      <div class="c-dot active"></div>
+      <div class="c-dot"></div>
+      <div class="c-dot"></div>
+      <div class="c-dot"></div>
+    </div>
+  </section>
+
+  <!-- CATEGORY CHIPS -->
+  <div class="cat-bar">
+    <span class="cat-label">Tipo de loja</span>
+    <div class="chips">
+      <button class="chip active">🏪 Todas</button>
+      <button class="chip">🍽️ Alimentação</button>
+      <button class="chip">👗 Moda</button>
+      <button class="chip">💻 Eletrônicos</button>
+      <button class="chip">💄 Beleza</button>
+      <button class="chip">🏺 Artesanato</button>
+      <button class="chip">🌱 Aberto agora</button>
+    </div>
+  </div>
+
+  <!-- STREET SCENE -->
+  <section class="street-wrapper">
+    <div class="sky-layer">
+
+      <!-- Sky decorations -->
+      <div class="sun"></div>
+      <div class="cloud cloud-a"></div>
+      <div class="cloud cloud-b"></div>
+      <div class="cloud cloud-c"></div>
+
+      <!-- Distant skyline SVG -->
+      <svg class="bg-skyline" viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0"   y="20" width="60"  height="60" fill="rgba(100,130,160,.18)" rx="2"/>
+        <rect x="15"  y="5"  width="30"  height="75" fill="rgba(100,130,160,.18)" rx="2"/>
+        <rect x="80"  y="30" width="50"  height="50" fill="rgba(100,130,160,.15)" rx="2"/>
+        <rect x="90"  y="10" width="20"  height="70" fill="rgba(100,130,160,.15)" rx="2"/>
+        <rect x="160" y="35" width="70"  height="45" fill="rgba(100,130,160,.13)" rx="2"/>
+        <rect x="250" y="15" width="40"  height="65" fill="rgba(100,130,160,.15)" rx="2"/>
+        <rect x="310" y="28" width="55"  height="52" fill="rgba(100,130,160,.12)" rx="2"/>
+        <rect x="380" y="8"  width="25"  height="72" fill="rgba(100,130,160,.18)" rx="2"/>
+        <rect x="420" y="32" width="65"  height="48" fill="rgba(100,130,160,.13)" rx="2"/>
+        <rect x="500" y="18" width="45"  height="62" fill="rgba(100,130,160,.15)" rx="2"/>
+        <rect x="560" y="25" width="80"  height="55" fill="rgba(100,130,160,.12)" rx="2"/>
+        <rect x="650" y="5"  width="30"  height="75" fill="rgba(100,130,160,.18)" rx="2"/>
+        <rect x="700" y="30" width="60"  height="50" fill="rgba(100,130,160,.13)" rx="2"/>
+        <rect x="780" y="12" width="50"  height="68" fill="rgba(100,130,160,.15)" rx="2"/>
+        <rect x="840" y="35" width="70"  height="45" fill="rgba(100,130,160,.12)" rx="2"/>
+        <rect x="930" y="20" width="40"  height="60" fill="rgba(100,130,160,.15)" rx="2"/>
+        <rect x="990" y="10" width="55"  height="70" fill="rgba(100,130,160,.18)" rx="2"/>
+        <rect x="1060" y="28" width="65" height="52" fill="rgba(100,130,160,.13)" rx="2"/>
+        <rect x="1140" y="5"  width="35" height="75" fill="rgba(100,130,160,.18)" rx="2"/>
+        <rect x="1190" y="32" width="80" height="48" fill="rgba(100,130,160,.12)" rx="2"/>
+        <rect x="1290" y="15" width="50" height="65" fill="rgba(100,130,160,.15)" rx="2"/>
+        <rect x="1360" y="25" width="80" height="55" fill="rgba(100,130,160,.13)" rx="2"/>
+      </svg>
+
+      <!-- BUILDINGS ROW -->
+      <div class="buildings-row" id="buildingsRow">
+
+        <!-- 1: Pizzaria do Zé — Alimentação (warm orange) -->
+        <div class="building" onclick="goToStore('pizza')">
+          <div class="bsign">Pizzaria do Zé</div>
+          <div class="bwall">
+            <div class="bwall-top" style="background:#FFD9A8;">
+              <div class="bwin lit" style="border-color:rgba(180,100,20,.2);background:rgba(255,235,150,.7);"></div>
+              <div class="bwin" style="border-color:rgba(180,100,20,.2);"></div>
+              <div class="bwin lit" style="border-color:rgba(180,100,20,.2);background:rgba(255,235,150,.7);"></div>
+            </div>
+            <div class="bawning" style="background:#E87A40;"></div>
+            <div class="bwall-bot" style="background:#FFD9A8; padding-bottom:0;">
+              <div class="bemoji">🍕</div>
+              <div class="bdoor" style="border-color:rgba(180,100,20,.2);background:rgba(100,60,20,.1);"></div>
+            </div>
+          </div>
+          <div class="binfo">
+            <span><span class="bstar">★</span> 4.8</span>
+            <span>127 seguidores</span>
+            <span class="bbadge-open">Aberto</span>
+          </div>
+        </div>
+
+        <!-- 2: Moda Feminina Ana — Moda (lavender) -->
+        <div class="building" onclick="goToStore('moda')">
+          <div class="bsign" style="color:#E8C8F8;">Moda Feminina Ana</div>
+          <div class="bwall">
+            <div class="bwall-top" style="background:#EDD8F8;">
+              <div class="bwin" style="border-color:rgba(120,60,180,.2);"></div>
+              <div class="bwin lit" style="border-color:rgba(120,60,180,.2);background:rgba(220,180,255,.6);"></div>
+              <div class="bwin" style="border-color:rgba(120,60,180,.2);"></div>
+            </div>
+            <div class="bawning" style="background:#B470E0;"></div>
+            <div class="bwall-bot" style="background:#EDD8F8; padding-bottom:0;">
+              <div class="bemoji">👗</div>
+              <div class="bdoor" style="border-color:rgba(120,60,180,.2);background:rgba(100,40,160,.08);"></div>
+            </div>
+          </div>
+          <div class="binfo">
+            <span><span class="bstar">★</span> 4.6</span>
+            <span>89 seguidores</span>
+            <span class="bbadge-open">Aberto</span>
+          </div>
+        </div>
+
+        <!-- 3: TechShop — Eletrônicos (sky blue) — taller building -->
+        <div class="building" onclick="goToStore('tech')">
+          <div class="bsign" style="color:#A8D0F8;">TechShop Eletrônicos</div>
+          <div class="bwall">
+            <div class="bwall-top" style="background:#C8DDF8; padding-top:20px;">
+              <div class="bwin lit" style="border-color:rgba(40,100,200,.18);background:rgba(160,210,255,.65);"></div>
+              <div class="bwin lit" style="border-color:rgba(40,100,200,.18);background:rgba(160,210,255,.65);"></div>
+              <div class="bwin" style="border-color:rgba(40,100,200,.18);"></div>
+            </div>
+            <div class="bawning" style="background:#4880D8;"></div>
+            <div class="bwall-bot" style="background:#C8DDF8; padding-bottom:0;">
+              <div class="bemoji">💻</div>
+              <div class="bdoor" style="border-color:rgba(40,100,200,.18);background:rgba(20,60,140,.08);"></div>
+            </div>
+          </div>
+          <div class="binfo">
+            <span><span class="bstar">★</span> 4.7</span>
+            <span>234 seguidores</span>
+            <span class="bbadge-open">Aberto</span>
+          </div>
+        </div>
+
+        <!-- 4: Beleza Natural — Beleza (pink) -->
+        <div class="building" onclick="goToStore('beleza')">
+          <div class="bsign" style="color:#FFD0E0;">Beleza Natural</div>
+          <div class="bwall">
+            <div class="bwall-top" style="background:#FFD8E8;">
+              <div class="bwin" style="border-color:rgba(200,60,100,.18);"></div>
+              <div class="bwin lit" style="border-color:rgba(200,60,100,.18);background:rgba(255,190,210,.7);"></div>
+              <div class="bwin" style="border-color:rgba(200,60,100,.18);"></div>
+            </div>
+            <div class="bawning" style="background:#E8608A;"></div>
+            <div class="bwall-bot" style="background:#FFD8E8; padding-bottom:0;">
+              <div class="bemoji">💄</div>
+              <div class="bdoor" style="border-color:rgba(200,60,100,.18);background:rgba(180,40,80,.08);"></div>
+            </div>
+          </div>
+          <div class="binfo">
+            <span><span class="bstar">★</span> 4.9</span>
+            <span>312 seguidores</span>
+            <span class="bbadge-closed">Fechado</span>
+          </div>
+        </div>
+
+        <!-- 5: Artesanato Mineiro — Artesanato (mint) -->
+        <div class="building" onclick="goToStore('arte')">
+          <div class="bsign" style="color:#C0EAB4;">Artesanato Mineiro</div>
+          <div class="bwall">
+            <div class="bwall-top" style="background:#D4EEC8;">
+              <div class="bwin" style="border-color:rgba(60,140,50,.18);"></div>
+              <div class="bwin lit" style="border-color:rgba(60,140,50,.18);background:rgba(180,240,160,.6);"></div>
+              <div class="bwin" style="border-color:rgba(60,140,50,.18);"></div>
+            </div>
+            <div class="bawning" style="background:#5AAA48;"></div>
+            <div class="bwall-bot" style="background:#D4EEC8; padding-bottom:0;">
+              <div class="bemoji">🏺</div>
+              <div class="bdoor" style="border-color:rgba(60,140,50,.18);background:rgba(40,100,30,.08);"></div>
+            </div>
+          </div>
+          <div class="binfo">
+            <span><span class="bstar">★</span> 4.5</span>
+            <span>56 seguidores</span>
+            <span class="bbadge-open">Aberto</span>
+          </div>
+        </div>
+
+        <!-- 6: Padaria Estrela — Alimentação (warm yellow) -->
+        <div class="building" onclick="goToStore('padaria')">
+          <div class="bsign" style="color:#FFE898;">Padaria Estrela</div>
+          <div class="bwall">
+            <div class="bwall-top" style="background:#FFF2C4;">
+              <div class="bwin lit" style="border-color:rgba(180,130,20,.18);background:rgba(255,235,120,.7);"></div>
+              <div class="bwin" style="border-color:rgba(180,130,20,.18);"></div>
+              <div class="bwin lit" style="border-color:rgba(180,130,20,.18);background:rgba(255,235,120,.7);"></div>
+            </div>
+            <div class="bawning" style="background:#C89820;"></div>
+            <div class="bwall-bot" style="background:#FFF2C4; padding-bottom:0;">
+              <div class="bemoji">🥐</div>
+              <div class="bdoor" style="border-color:rgba(180,130,20,.18);background:rgba(140,100,10,.08);"></div>
+            </div>
+          </div>
+          <div class="binfo">
+            <span><span class="bstar">★</span> 4.8</span>
+            <span>178 seguidores</span>
+            <span class="bbadge-open">Aberto</span>
+          </div>
+        </div>
+
+        <!-- 7: Pet Amor — Pet (lilac/purple) -->
+        <div class="building" onclick="">
+          <div class="bsign" style="color:#D8E8F8;">Pet Amor</div>
+          <div class="bwall">
+            <div class="bwall-top" style="background:#D8E8F8;">
+              <div class="bwin" style="border-color:rgba(60,100,180,.18);"></div>
+              <div class="bwin lit" style="border-color:rgba(60,100,180,.18);background:rgba(160,200,255,.6);"></div>
+              <div class="bwin" style="border-color:rgba(60,100,180,.18);"></div>
+            </div>
+            <div class="bawning" style="background:#5878C0;"></div>
+            <div class="bwall-bot" style="background:#D8E8F8; padding-bottom:0;">
+              <div class="bemoji">🐾</div>
+              <div class="bdoor" style="border-color:rgba(60,100,180,.18);background:rgba(40,70,160,.08);"></div>
+            </div>
+          </div>
+          <div class="binfo">
+            <span><span class="bstar">★</span> 4.4</span>
+            <span>41 seguidores</span>
+            <span class="bbadge-open">Aberto</span>
+          </div>
+        </div>
+
+        <!-- 8: Livraria Cultura — Livros (sand/tan) -->
+        <div class="building" onclick="">
+          <div class="bsign" style="color:#F0DEB8;">Livraria Cultura</div>
+          <div class="bwall">
+            <div class="bwall-top" style="background:#F0DEBA;">
+              <div class="bwin lit" style="border-color:rgba(160,110,30,.18);background:rgba(255,220,130,.6);"></div>
+              <div class="bwin" style="border-color:rgba(160,110,30,.18);"></div>
+              <div class="bwin lit" style="border-color:rgba(160,110,30,.18);background:rgba(255,220,130,.6);"></div>
+            </div>
+            <div class="bawning" style="background:#A06820;"></div>
+            <div class="bwall-bot" style="background:#F0DEBA; padding-bottom:0;">
+              <div class="bemoji">📚</div>
+              <div class="bdoor" style="border-color:rgba(160,110,30,.18);background:rgba(120,80,20,.08);"></div>
+            </div>
+          </div>
+          <div class="binfo">
+            <span><span class="bstar">★</span> 4.7</span>
+            <span>93 seguidores</span>
+            <span class="bbadge-closed">Fechado</span>
+          </div>
+        </div>
+
+      </div><!-- /buildings-row -->
+    </div><!-- /sky-layer -->
+
+    <!-- SIDEWALK with trees -->
+    <div class="sidewalk-layer">
+      <div class="trees-row">
+        <div class="tree-spot"><span class="tree">🌳</span></div>
+        <div class="tree-spot"><span class="lamp">🕯</span></div>
+        <div class="tree-spot"><span class="tree">🌳</span></div>
+        <div class="tree-spot"><span class="tree">🌳</span></div>
+        <div class="tree-spot"><span class="lamp">🕯</span></div>
+        <div class="tree-spot"><span class="tree">🌳</span></div>
+        <div class="tree-spot"><span class="tree">🌳</span></div>
+        <div class="tree-spot"><span class="lamp">🕯</span></div>
+        <div class="tree-spot"><span class="tree">🌳</span></div>
+      </div>
+    </div>
+
+    <!-- ROAD -->
+    <div class="road-layer"></div>
+
+  </section><!-- /street-wrapper -->
+
+</div><!-- /home screen -->
+
+
+<!-- ========================= STORE SCREEN ========================= -->
+<div id="store" class="screen">
+  <div class="store-page">
+    <div class="store-header">
+
+      <div class="store-cover" style="background:linear-gradient(135deg,#FAECE7,#FFD4B4);">
+        <span style="font-size:64px">🍕</span>
+        <button class="back-btn" onclick="goHome()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+          Voltar
+        </button>
+      </div>
+
+      <div class="store-identity">
+        <div style="display:flex;gap:14px;align-items:flex-start;flex:1;">
+          <div class="store-avatar">🍕</div>
+          <div style="flex:1;">
+            <div class="store-title">Pizzaria do Zé</div>
+            <div class="store-sub">Alimentação · Italiana · Centro</div>
+            <div class="store-stats">
+              <span class="store-stat"><strong>4.8</strong> ★ avaliação</span>
+              <span class="store-stat"><strong>127</strong> seguidores</span>
+              <span class="store-stat"><strong>48</strong> avaliações</span>
+              <span style="background:#EAF3DE;color:#3B6D11;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:800;">Aberto</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn-follow">+ Seguir</button>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'posts')">Publicações</div>
+        <div class="tab" onclick="switchTab(this,'produtos')">Produtos</div>
+        <div class="tab" onclick="switchTab(this,'avaliacoes')">Avaliações</div>
+        <div class="tab" onclick="switchTab(this,'comunidade')">Comunidade</div>
+      </div>
+    </div>
+
+    <div class="tab-content">
+
+      <!-- POSTS -->
+      <div id="posts" class="tab-panel active">
+        <div class="post-card">
+          <div class="post-img">🍕</div>
+          <div class="post-body">
+            <span class="post-tag">🔥 Oferta</span>
+            <div class="post-title">Pizza Margherita com 30% off nesta semana!</div>
+            <div class="post-text">Nossa pizza clássica com massa artesanal, molho de tomate fresco e muito queijo mozzarella. Válido até sexta-feira.</div>
+            <div class="post-footer">
+              <span>há 2 horas</span>
+              <span>❤️ 34 &nbsp; 💬 8</span>
+            </div>
+          </div>
+        </div>
+        <div class="post-card">
+          <div class="post-img">🌿</div>
+          <div class="post-body">
+            <span class="post-tag">📰 Novidade</span>
+            <div class="post-title">Agora temos opção vegana no cardápio!</div>
+            <div class="post-text">Adicionamos 5 novos sabores veganos com queijo à base de castanha. Venha experimentar e nos diga o que achou!</div>
+            <div class="post-footer">
+              <span>há 1 dia</span>
+              <span>❤️ 61 &nbsp; 💬 14</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUTOS -->
+      <div id="produtos" class="tab-panel">
+        <div class="products-grid">
+          <div class="product-card">
+            <div class="product-img">🍕</div>
+            <div class="product-info">
+              <div class="product-name">Pizza Margherita</div>
+              <div class="product-desc">Molho fresco e mozzarella</div>
+              <div class="product-price">R$ 38,00</div>
+              <button class="product-add">+ Adicionar</button>
+            </div>
+          </div>
+          <div class="product-card">
+            <div class="product-img">🧀</div>
+            <div class="product-info">
+              <div class="product-name">Pizza 4 Queijos</div>
+              <div class="product-desc">Quatro queijos especiais</div>
+              <div class="product-price">R$ 42,00</div>
+              <button class="product-add">+ Adicionar</button>
+            </div>
+          </div>
+          <div class="product-card">
+            <div class="product-img">🌿</div>
+            <div class="product-info">
+              <div class="product-name">Pizza Vegana</div>
+              <div class="product-desc">Queijo de castanha</div>
+              <div class="product-price">R$ 44,00</div>
+              <button class="product-add">+ Adicionar</button>
+            </div>
+          </div>
+          <div class="product-card">
+            <div class="product-img">🥤</div>
+            <div class="product-info">
+              <div class="product-name">Refrigerante 2L</div>
+              <div class="product-desc">Coca, Guaraná ou Fanta</div>
+              <div class="product-price">R$ 10,00</div>
+              <button class="product-add">+ Adicionar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AVALIAÇÕES -->
+      <div id="avaliacoes" class="tab-panel">
+        <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px;display:flex;align-items:center;gap:22px;">
+          <div style="text-align:center;">
+            <div style="font-family:var(--ff-display);font-size:44px;font-weight:700;line-height:1;color:var(--text);">4.8</div>
+            <div style="font-size:20px;color:#BA7517;margin:5px 0;">★★★★★</div>
+            <div style="font-size:12px;color:var(--text-3);">48 avaliações</div>
+          </div>
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:var(--text-2);">5★ <div style="flex:1;background:#E8E0D8;border-radius:4px;height:7px;"><div style="width:80%;background:#BA7517;height:7px;border-radius:4px;"></div></div> 80%</div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;font-size:12px;color:var(--text-2);">4★ <div style="flex:1;background:#E8E0D8;border-radius:4px;height:7px;"><div style="width:15%;background:#EF9F27;height:7px;border-radius:4px;"></div></div> 15%</div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);">3★ <div style="flex:1;background:#E8E0D8;border-radius:4px;height:7px;"><div style="width:5%;background:#B4B2A9;height:7px;border-radius:4px;"></div></div> 5%</div>
+          </div>
+        </div>
+        <div class="review-card">
+          <div class="review-header">
+            <div class="avatar">MC</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;">Maria Carvalho</div>
+              <div class="stars">★★★★★</div>
+            </div>
+            <div style="margin-left:auto;font-size:11px;color:var(--text-3);">há 3 dias</div>
+          </div>
+          <div style="font-size:13px;color:var(--text-2);line-height:1.6;">Melhor pizza da cidade! Massa fininha e muito sabor. Entrega rápida e o pessoal é super atencioso.</div>
+        </div>
+        <div class="review-card">
+          <div class="review-header">
+            <div class="avatar" style="background:#D4EEC8;color:#3B6D11;">JS</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;">João Silva</div>
+              <div class="stars">★★★★<span style="color:var(--text-3);">★</span></div>
+            </div>
+            <div style="margin-left:auto;font-size:11px;color:var(--text-3);">há 1 semana</div>
+          </div>
+          <div style="font-size:13px;color:var(--text-2);line-height:1.6;">Ótima pizza! O único ponto é que a entrega demorou um pouco. Mas o produto em si é excelente.</div>
+        </div>
+      </div>
+
+      <!-- COMUNIDADE -->
+      <div id="comunidade" class="tab-panel">
+        <div class="comment-input-area">
+          <div class="avatar" style="flex-shrink:0;">EU</div>
+          <input type="text" placeholder="Pergunte algo para o dono da loja...">
+          <button class="btn-primary">Enviar</button>
+        </div>
+        <div class="comment-card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div class="avatar" style="width:30px;height:30px;font-size:11px;flex-shrink:0;">PT</div>
+            <div>
+              <span style="font-size:13px;font-weight:700;">Pedro Teixeira</span>
+              <span style="font-size:11px;color:var(--text-3);margin-left:6px;">há 2 horas</span>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:10px;">Vocês fazem pizza sem glúten? Minha esposa tem intolerância.</div>
+          <div style="padding:10px 12px;background:var(--bg);border-left:3px solid var(--primary);margin-left:8px;border-radius:0 6px 6px 0;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+              <span style="font-size:13px;font-weight:700;">Zé (dono)</span>
+              <span class="owner-badge">Dono</span>
+              <span style="font-size:11px;color:var(--text-3);margin-left:4px;">há 1 hora</span>
+            </div>
+            <div style="font-size:13px;color:var(--text-2);">Sim! Temos massa sem glúten com acréscimo de R$5,00. Basta solicitar no pedido! 🍕</div>
+          </div>
+        </div>
+        <div class="comment-card">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div class="avatar" style="width:30px;height:30px;font-size:11px;background:#FFF2C4;color:#A87820;flex-shrink:0;">AL</div>
+            <div>
+              <span style="font-size:13px;font-weight:700;">Ana Lima</span>
+              <span style="font-size:11px;color:var(--text-3);margin-left:6px;">há 5 horas</span>
+            </div>
+          </div>
+          <div style="font-size:13px;color:var(--text-2);">Qual o horário de funcionamento no domingo?</div>
+        </div>
+      </div>
+
+    </div><!-- /tab-content -->
+  </div><!-- /store-page -->
+</div><!-- /store screen -->
+
+
+<script>
+// ---- Screen navigation ----
+function goToStore(id) {
+  document.getElementById('home').classList.remove('active');
+  document.getElementById('store').classList.add('active');
+  window.scrollTo(0,0);
+}
+function goHome() {
+  document.getElementById('store').classList.remove('active');
+  document.getElementById('home').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ---- Tabs ----
+function switchTab(el, panel) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(panel).classList.add('active');
+}
+
+// ---- Category chips ----
+document.querySelectorAll('.chip').forEach(c => {
+  c.addEventListener('click', () => {
+    document.querySelectorAll('.chip').forEach(x => x.classList.remove('active'));
+    c.classList.add('active');
+  });
+});
+
+// ---- Nav links ----
+document.querySelectorAll('.nav-link').forEach(l => {
+  l.addEventListener('click', () => {
+    document.querySelectorAll('.nav-link').forEach(x => x.classList.remove('active'));
+    l.classList.add('active');
+  });
+});
+
+// ---- Carousel ----
+const track  = document.getElementById('carouselTrack');
+const dots   = document.querySelectorAll('.c-dot');
+let cur = 0;
+const total = 4;
+let timer;
+
+function goSlide(n) {
+  cur = (n + total) % total;
+  track.style.transform = `translateX(-${cur * 100}%)`;
+  dots.forEach((d, i) => d.classList.toggle('active', i === cur));
+}
+
+document.getElementById('cPrev').addEventListener('click', () => { goSlide(cur - 1); resetTimer(); });
+document.getElementById('cNext').addEventListener('click', () => { goSlide(cur + 1); resetTimer(); });
+dots.forEach((d, i) => d.addEventListener('click', () => { goSlide(i); resetTimer(); }));
+
+function resetTimer() {
+  clearInterval(timer);
+  timer = setInterval(() => goSlide(cur + 1), 5000);
+}
+timer = setInterval(() => goSlide(cur + 1), 5000);
+</script>
+
+</body>
+</html>
