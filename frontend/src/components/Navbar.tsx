@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 
 // 1. IMPORTANDO A IMAGEM: 
-import logoPanelinhas from "../assets/logo.png"; 
+import logoPanelinhas from "../assets/logo_laranja.svg"; 
 
 // 2. A "STRUCT" DO TYPESCRIPT:
 interface ItemDoMenu {
