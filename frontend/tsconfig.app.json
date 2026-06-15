@@ -21,9 +21,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-<<<<<<< HEAD
   "include": ["src"]
-=======
-  "include": ["/frontend/src"]
->>>>>>> configuracao_inicial_django
 }
