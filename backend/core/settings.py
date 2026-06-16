@@ -124,8 +124,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# App 'contas', modelo 'usuarioCustomizado'
-AUTH_USER_MODEL = 'contas.usuarioCustomizado'
+# App 'contas', modelo 'UsuarioCustomizado'
+AUTH_USER_MODEL = 'contas.UsuarioCustomizado'
 
 
 # Configurações do SimpleJWT
@@ -274,9 +274,10 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-# App 'contas', modelo 'usuarioCustomizado'
-AUTH_USER_MODEL = 'contas.usuarioCustomizado'
+# App 'contas', modelo 'UsuarioCustomizado'
+AUTH_USER_MODEL = 'contas.UsuarioCustomizado'
 
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Configurações do SimpleJWT
 REST_FRAMEWORK = {

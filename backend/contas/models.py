@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
-class usuarioCustomizado(AbstractUser):
+class UsuarioCustomizado(AbstractUser):
     # O AbstractUser já traz username, first_name, last_name, email e password.
     # Complementaremos com os campos email, eh_dono_loja e telefone.
     

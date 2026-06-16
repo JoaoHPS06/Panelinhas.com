@@ -24,10 +24,10 @@ export const Register = () => {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/register", {
+      const res = await fetch("http://localhost:8000/register/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, email, senha }),
+        body: JSON.stringify({ nome, email, senha, confirmarSenha }),
       });
 
       const data = await res.json();
