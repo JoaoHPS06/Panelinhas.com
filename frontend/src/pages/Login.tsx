@@ -10,13 +10,14 @@ export const Login = () => {
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin(e) {
+  async function handleLogin(e: React.MouseEvent | React.KeyboardEvent) {
     e.preventDefault();
     setErro("");
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/login", {
+      // CORREÇÃO 1: Adicionar a barra no final da URL
+      const res = await fetch("http://localhost:8000/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, senha }),
@@ -30,8 +31,12 @@ export const Login = () => {
       }
 
       localStorage.setItem("Panelinha_user", JSON.stringify(data));
-      navigate("/dashboard");
-    } catch {
+      
+      // CORREÇÃO 2: Navegar corretamente para a página inicial
+      navigate("/");  // ou navigate("/dashboard") se tiver um dashboard
+      
+    } catch (error) {
+      console.error("Erro no login:", error);
       setErro("Não foi possível conectar ao servidor.");
     } finally {
       setLoading(false);
