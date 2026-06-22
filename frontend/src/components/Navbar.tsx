@@ -1,7 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 
 // 1. IMPORTANDO A IMAGEM: 
-import logoPanelinhas from "../assets/logo.png"; 
+import logoPanelinhas from "../assets/logo_laranja.svg"; 
 
 // 2. A "STRUCT" DO TYPESCRIPT:
 interface ItemDoMenu {
@@ -63,6 +63,7 @@ export const Navbar = () => {
       {/* Direita: Busca e Login (Mantido exatamente como você fez) */}
       <div className="flex items-center gap-3">
         <div className="hidden md:flex items-center gap-2 bg-[#F2EDE6] border border-black/10 rounded-full px-4 py-1.5 w-64 focus-within:border-[#D85A30] transition-all">
+
           <input
             type="text"
             placeholder="Buscar lojas..."
@@ -76,8 +77,7 @@ export const Navbar = () => {
         >
           Login
         </Link>
-      </div>
-      
+      </div>      
     </nav>
   );
 };

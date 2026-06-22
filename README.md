@@ -62,6 +62,17 @@ O sistema é dividido em dois grandes perfis de uso:
 
 **Banco de dados**
 - SQLite
+
+
+**Acessos**
+- Frontend: http://localhost:5173
+- Backend:  http://localhost:8000
+- Admin:    http://localhost:8000/admin
+
+```bash
+docker compose exec backend python manage.py makemigrations
+docker compose exec backend python manage.py migrate
+```
 ---
 
 ## 👥 Integrantes da equipe

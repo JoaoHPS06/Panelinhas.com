@@ -4,7 +4,6 @@ import { Loja } from "./pages/Loja";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Home } from "./components/Home";
-import { useEffect, useState } from "react";
 
 const LayoutComNavbar = () => {
   return (
