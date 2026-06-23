@@ -4,7 +4,7 @@ import { Loja } from "./pages/Loja";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Home } from "./components/Home";
-import { useEffect, useState } from "react";
+//import { useEffect, useState } from "react";
 
 const LayoutComNavbar = () => {
   return (
@@ -18,7 +18,7 @@ const LayoutComNavbar = () => {
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-[#F2EDE6]">
+      <div className="min-h-screen bg-creme-suave">
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
