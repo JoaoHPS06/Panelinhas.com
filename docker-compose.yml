@@ -1,0 +1,30 @@
+services:
+  backend:
+    build: ./backend
+    container_name: panelinhas-backend
+
+    ports:
+      - "8000:8000"
+
+    volumes:
+      - ./backend:/app
+
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: panelinhas-frontend
+
+    ports:
+      - "5173:5173"
+
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+    command: npm run dev -- --host
+
+    depends_on:
+      - backend
