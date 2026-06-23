@@ -1,7 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;700&family=Nunito:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
-
 @source "../index.html";
 @source "./**/*.{js,ts,jsx,tsx}";
+
+/*Peso 400: font-normal
+Peso 500: font-medium
+Peso 600: font-semibold
+Peso 700: font-bold
+Peso 800: font-extrabold*/
+
+@theme {
+  /*Toda cor customizada precisa começar com '--color-' */
+  --color-creme-suave: #FDFBF7;
+  --color-cafe-expresso: #2D1A0D;
+  --color-marrom-rustico: #824100;
+  --color-vermelho-pimenta: #D00000;
+  --color-amarelo-mostarda: #FBBB01;
+  --color-areia: #EBE3D5;
+  --color-verde-salvia: #5D8063;
+  --font-nunito: 'Nunito', sans-serif;
+  --font-fraunces: 'Fraunces', serif
+}
 
 /* Mantém a sua animação bob se quiser aqui embaixo */
 @keyframes bob {
@@ -13,3 +32,4 @@
     transform: translateY(-6px);
   }
 }
+
