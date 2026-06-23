@@ -21,10 +21,10 @@ export const Navbar = () => {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 h-29 bg-white border-b border-black/10 px-7 flex items-center justify-between shadow-sm">
+    <nav className="fixed top-14 left-1/2 -translate-x-1/2 w-[96%] max-w-6xl h-16 rounded-full flex items-center justify-between px-8 z-50 backdrop-blur-md bg-creme-suave/70 border border-marrom-rustico/10 shadow-lg">
       
       {/* Esquerda: Links */}
-      <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+      <div className="flex gap-6 items-center font-nunito">
         
         {/* 5. O LAÇO DE REPETIÇÃO (Substituindo os 3 Links manuais) */}
         {links.map((link, index) => {
@@ -35,11 +35,10 @@ export const Navbar = () => {
             <Link
               key={index}
               to={link.caminho}
-              // 6. AS CRASES MÁGICAS + OPERADOR TERNÁRIO:
-              className={`px-4 py-1.5 rounded-full no-underline text-xs font-extrabold uppercase tracking-wider transition-all ${
+              className={`px-4 py-1.5 rounded-full no-underline hover:underline hover:underline-offset-8 text-xs font-extrabold uppercase tracking-wider transition-all ${
                 ativo
-                  ? "bg-[#FAECE7] text-[#D85A30]" // Cor se estiver na página
-                  : "text-[#6B5040] hover:bg-[#FAECE7] hover:text-[#D85A30]" // Cor normal
+                  ? "bg-creme-suave text-marrom-rustico" // Cor se estiver na página
+                  : "text-cafe-expresso hover:bg-creme-suave hover:text-vermelho-pimenta" // Cor normal
               }`}
             >
               {link.nome}
@@ -49,31 +48,29 @@ export const Navbar = () => {
       </div>
 
       {/* Centro: Logo (A Imagem que você enviou) */}
-      <div className="flex items-center justify-center cursor-pointer hover:scale-105 hover:transition-transform">
-        <Link to="/">
+      <div className="absolute left-1/2 -translate-x-1/2 w-52 h-42 bg-creme-suave rounded-full border-4 border-creme-suave shadow-xl flex items-center justify-center overflow-hidden">
+        <Link to="/" className="w-full h-full flex items-center justify-center">
            {/* A TAG DE IMAGEM DO REACT */}
           <img 
             src={logoPanelinhas} 
             alt="Logo Panelinhas.com" 
-            className="h-27 w-auto object-contain" // Ajusta a altura para caber perfeitamente no menu de h-16
+            className="h-full w-full object-cover scale-125" 
           />
         </Link>
       </div>
 
-      {/* Direita: Busca e Login (Mantido exatamente como você fez) */}
       <div className="flex items-center gap-3">
-        <div className="hidden md:flex items-center gap-2 bg-[#F2EDE6] border border-black/10 rounded-full px-4 py-1.5 w-64 focus-within:border-[#D85A30] transition-all">
-
+        <div className="hidden md:flex items-center gap-2 bg-areia/50 border border-black/10 rounded-full px-4 py-1.5 w-64 focus-within:border-marrom-rustico transition-all">
           <input
             type="text"
             placeholder="Buscar lojas..."
-            className="bg-transparent text-sm outline-none w-full text-[#2A1F14] placeholder-[#9E8878]"
+            className="bg-transparent text-sm outline-none w-full text-cafe-expresso placeholder-marrom-rustico/50"
           />
         </div>
         
         <Link
           to="/login"
-          className="px-5 py-1.5 rounded-full no-underline border-1.5 border-[#D85A30] text-[#D85A30] text-sm font-extrabold hover:bg-[#D85A30] hover:text-white transition-all"
+          className="px-5 py-1.5 rounded-full no-underline border-1.5 border-marrom-rustico text-marrom-rustico text-sm font-extrabold hover:bg-marrom-rustico hover:text-creme-suave transition-all"
         >
           Login
         </Link>
