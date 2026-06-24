@@ -3,16 +3,22 @@
 interface BotaoProps {
   texto: string; 
   onClick?: () => void;
+  ativo?: boolean
 }
 
-// 2. Colocamos as Props dentro dos parênteses da função, igual aos parâmetros de uma função em C.
-// E avisamos que ela deve seguir o contrato ': BotaoProps'
-export const BotaoPrincipal = ({ texto, onClick }: BotaoProps) => {
-  
+export const BotaoPrincipal = ({ texto, onClick, ativo }: BotaoProps) => {
   return (
-    <button onClick={onClick} className="bg-vermelho-pimenta text-white font-bold px-4 py-2 rounded-md hover:scale-105 transition-transform">
-      {/* 3. Substituímos o "Comprar" fixo pela nossa variável. 
-          No React, sempre que queremos usar uma variável dentro do HTML, colocamos ela entre chaves { } */}
+    <button 
+      onClick={onClick}
+      // 1. Abrimos { } para avisar o React que vamos rodar código JS.
+      // 2. Usamos as crases ( ` ) para montar o texto dinâmico.
+      // 3. O que está fora do ${} é aplicado sempre. O que está dentro depende da lógica!
+      className={`px-4 py-2 rounded-md font-bold transition-transform hover:scale-105 ${
+        ativo 
+          ? 'bg-vermelho-pimenta text-white shadow-md' 
+          : 'bg-transparent text-marrom-rustico hover:bg-vermelho-pimenta/10'
+      }`}
+    >
       {texto}
     </button>
   );
