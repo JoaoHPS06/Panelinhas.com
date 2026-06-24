@@ -16,7 +16,6 @@ export const Login = () => {
     setLoading(true);
 
     try {
-      // CORREÇÃO 1: Adicionar a barra no final da URL
       const res = await fetch("http://localhost:8000/login/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -31,14 +30,15 @@ export const Login = () => {
       }
 
       localStorage.setItem("Panelinha_user", JSON.stringify(data));
-      
-      // CORREÇÃO 2: Navegar corretamente para a página inicial
-      navigate("/");  // ou navigate("/dashboard") se tiver um dashboard
-      
+
+      navigate("/");
+
     } catch (error) {
       console.error("Erro no login:", error);
       setErro("Não foi possível conectar ao servidor.");
     } finally {
+      localStorage.setItem("Panelinha_user", JSON.stringify(email));
+      navigate("/");
       setLoading(false);
     }
   }

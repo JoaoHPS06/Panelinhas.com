@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 // 1. IMPORTANDO A IMAGEM: 
-import logoPanelinhas from "../assets/logo_laranja.svg"; 
+import logoPanelinhas from "../assets/logo_laranja.svg";
 
 // 2. A "STRUCT" DO TYPESCRIPT:
 interface ItemDoMenu {
@@ -12,20 +13,35 @@ interface ItemDoMenu {
 export const Navbar = () => {
   // 3. LIGANDO O RADAR:
   const local = useLocation();
+  const [isLogged, setIsLogged] = useState(false);
+
+  useEffect(() => {
+    const user = localStorage.getItem("Panelinha_user");
+    setIsLogged(!!user); // Define como true se 'user' existir, senão false
+  }, [local]);
+
+  const handleLogout = () => {
+    localStorage.removeItem("Panelinha_user");
+    setIsLogged(false);
+  }
 
   // 4. NOSSA LISTA DE DADOS (Só para o lado esquerdo):
   const links: ItemDoMenu[] = [
     { nome: "Home", caminho: "/" },
     { nome: "Explore", caminho: "/explore" },
-    { nome: "Meu Feed", caminho: "/feed" }
   ];
 
+  if (isLogged) {
+    links.push({ nome: "Meu Feed", caminho: "/feed" });
+    links.push({ nome: "Minhas Lojas", caminho: "/minhas-lojas" });
+  }
+
   return (
-    <nav className="fixed top-14 left-1/2 -translate-x-1/2 w-[96%] max-w-6xl h-16 rounded-full flex items-center justify-between px-8 z-50 backdrop-blur-md bg-creme-suave/70 border border-marrom-rustico/10 shadow-lg">
-      
+    <nav className="fixed top-14 left-1/2 -translate-x-1/2 w-[96%] max-w-7xl h-16 rounded-full flex items-center justify-between px-8 z-50 backdrop-blur-md bg-creme-suave/70 border border-marrom-rustico/10 shadow-lg">
+
       {/* Esquerda: Links */}
       <div className="flex gap-6 items-center font-nunito">
-        
+
         {/* 5. O LAÇO DE REPETIÇÃO (Substituindo os 3 Links manuais) */}
         {links.map((link, index) => {
           // Criando uma variável para saber se a página atual é a do link
@@ -35,11 +51,10 @@ export const Navbar = () => {
             <Link
               key={index}
               to={link.caminho}
-              className={`px-4 py-1.5 rounded-full no-underline hover:underline hover:underline-offset-8 text-xs font-extrabold uppercase tracking-wider transition-all ${
-                ativo
-                  ? "bg-creme-suave text-marrom-rustico" // Cor se estiver na página
-                  : "text-cafe-expresso hover:bg-creme-suave hover:text-vermelho-pimenta" // Cor normal
-              }`}
+              className={`px-4 py-1.5 rounded-full no-underline hover:underline hover:underline-offset-8 text-xs font-extrabold uppercase tracking-wider transition-all ${ativo
+                ? "bg-creme-suave text-marrom-rustico" // Cor se estiver na página
+                : "text-cafe-expresso hover:bg-creme-suave hover:text-vermelho-pimenta" // Cor normal
+                }`}
             >
               {link.nome}
             </Link>
@@ -50,11 +65,11 @@ export const Navbar = () => {
       {/* Centro: Logo (A Imagem que você enviou) */}
       <div className="absolute left-1/2 -translate-x-1/2 w-52 h-42 bg-creme-suave rounded-full border-4 border-creme-suave shadow-xl flex items-center justify-center overflow-hidden">
         <Link to="/" className="w-full h-full flex items-center justify-center">
-           {/* A TAG DE IMAGEM DO REACT */}
-          <img 
-            src={logoPanelinhas} 
-            alt="Logo Panelinhas.com" 
-            className="h-full w-full object-cover scale-125" 
+          {/* A TAG DE IMAGEM DO REACT */}
+          <img
+            src={logoPanelinhas}
+            alt="Logo Panelinhas.com"
+            className="h-full w-full object-cover scale-125"
           />
         </Link>
       </div>
@@ -67,14 +82,25 @@ export const Navbar = () => {
             className="bg-transparent text-sm outline-none w-full text-cafe-expresso placeholder-marrom-rustico/50"
           />
         </div>
-        
-        <Link
-          to="/login"
-          className="px-5 py-1.5 rounded-full no-underline border-1.5 border-marrom-rustico text-marrom-rustico text-sm font-extrabold hover:bg-marrom-rustico hover:text-creme-suave transition-all"
-        >
-          Login
-        </Link>
-      </div>      
+
+        {isLogged && (
+          <button
+            onClick={handleLogout}
+            className="px-5 py-1.5 rounded-full border-1.5 border-marrom-rustico text-marrom-rustico text-sm font-extrabold hover:bg-marrom-rustico hover:text-creme-suave transition-all"
+          >
+            Sair
+          </button>
+        )}
+        {!isLogged && (
+          <Link
+            to="/login"
+            className="px-5 py-1.5 rounded-full no-underline border-1.5 border-marrom-rustico text-marrom-rustico text-sm font-extrabold hover:bg-marrom-rustico hover:text-creme-suave transition-all"
+          >
+            Entrar
+          </Link>
+        )}
+      </div>
     </nav>
   );
-};
+}
+
