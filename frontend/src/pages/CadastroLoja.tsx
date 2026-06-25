@@ -188,14 +188,12 @@ export const CadastroLoja = () => {
                     </button>
                 </form>
 
-                {/* VISUALIZADOR DA CASINHA (CHAMANDO O NOVO COMPONENTE) */}
                 <div className="md:col-span-2 bg-gradient-to-b from-[#7FC8E8] to-[#D8EEF8] border border-marrom-rustico/10 rounded-2xl p-8 flex flex-col items-center justify-center min-h-[340px] shadow-inner relative overflow-hidden">
                     <span className="absolute top-3 left-4 text-[10px] font-extrabold uppercase tracking-widest text-sky-950/50">
                         Visualização na Rua
                     </span>
 
                     <div className="scale-125 transform origin-center transition-all duration-300">
-                        {/* 👈 Chamei apenas a tag limpa do componente passando o estado como objeto */}
                         <NewPredioLoja
                             loja={{
                                 id: 0,
