@@ -1,9 +1,11 @@
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
 import { Navbar } from "./components/Navbar";
 import { Loja } from "./pages/Loja";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { Home } from "./components/Home";
+import { CadastroLoja } from "./pages/CadastroLoja";
+import { MinhasLojas } from "./pages/MinhasLojas";
 //import { useEffect, useState } from "react";
 
 const LayoutComNavbar = () => {
@@ -14,6 +16,13 @@ const LayoutComNavbar = () => {
     </>
   );
 };
+export const ProtectedRoute = () => {
+  const user = localStorage.getItem("Panelinha_user");
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  return <Outlet />;
+};
 
 function App() {
   return (
@@ -22,6 +31,11 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/feed" element={<div>Aqui vai a página do Feed</div>} />
+            <Route path="/minhas-lojas" element={<MinhasLojas />} />
+            <Route path="/cadastro-loja" element={<CadastroLoja />} />
+          </Route>
 
           <Route element={<LayoutComNavbar />}>
             <Route
@@ -41,6 +55,7 @@ function App() {
               }
             />
             <Route path="/loja/:id" element={<Loja />} />
+
           </Route>
         </Routes>
       </div>
