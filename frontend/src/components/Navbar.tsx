@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 // 1. IMPORTANDO A IMAGEM: 
-import logoPanelinhas from "../assets/logo_laranja.svg";
+import logoPanelinhas from "../assets/logo.png"; 
 
 // 2. A "STRUCT" DO TYPESCRIPT:
 interface ItemDoMenu {
@@ -102,5 +102,4 @@ export const Navbar = () => {
       </div>
     </nav>
   );
-}
-
+};
