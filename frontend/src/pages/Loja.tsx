@@ -1,99 +1,134 @@
-import { useParams } from "react-router-dom";
-import { BotaoPrincipal } from "../components/BotaoPrincipal";
 import { useState } from "react";
+import { useParams } from "react-router-dom";
+import { LojaHeader } from "../components/LojaHeader.tsx";
+import { LojaProdutos, type Produto } from "../components/LojaProdutos.tsx";
+import { LojaAvaliacoes, type Avaliacao } from "../components/LojaAvaliacoes.tsx";
+import { LojaPosts, type PostLoja } from "../components/LojaPosts.tsx";
+import { LojaComunidade, type TopicoForum } from "../components/LojaComunidade.tsx";
+import { type LojaData } from "../components/PredioLoja.tsx";
 
-interface PostProps {
-  texto: string;
-  autor: string;
-}
-
-const PostComunidade = ({ texto, autor }: PostProps) => {
-  return (
-    <article className="relative pl-20 pr-4 mb-12 flex items-center min-h-12">
-      <div className="flex items-center justify-center text-white font-bold absolute left-2 w-12 h-12 rounded-full bg-verde-salvia"></div>
-        <div className="flex flex-col gap-1">
-          <span className="font-bold text-marrom-rustico">{autor}</span>
-          <p className="text-cafe-expresso leading-relaxed">{texto}</p>
-        </div>
-
-    </article>
-  );
+// Tipo estendido para agrupar a loja com seus dados internos das abas
+type LojaCompleta = LojaData & {
+  produtos: Produto[];
+  avaliacoes: Avaliacao[];
+  posts: PostLoja[];
+  topicos: TopicoForum[];
 };
 
-export const Loja = () => {
-  // O hook useParams serve para pegar o "id" que veio lá da URL
-  const { id } = useParams<{ id: string }>();
-  const [abaAtiva, setAbaAtiva] = useState("catalogo");
+// Nosso "Banco de Dados" simulado com DUAS lojas para testarmos a dinâmica
+const todasAsLojas: LojaCompleta[] = [
+  {
+    id: 1, // Acessível via /loja/1
+    name: "Pizzaria do Zé",
+    emoji: "🍕",
+    rating: 4.8,
+    followers: 127,
+    category: "Alimentação · Italiana",
+    isOpen: true,
+    windows: [true, true, true, false],              
+    primary: "marrom-rustico", 
+    secondary: "areia",       
+    produtos: [
+      { id: "prod-1", image: "🍕", nome: "Pizza Margherita", descricao: "Molho fresco, mozzarella e manjericão.", preco: 42.9, ehNovo: true },
+      { id: "prod-2", image: "🍕", nome: "Pizza 4 Queijos", descricao: "Mozzarella, provolone, gorgonzola e catupiry.", preco: 49.9 },
+      { id: "prod-3", image: "🥤", nome: "Refrigerante Cola 2L", descricao: "Garrafa de 2 litros trincando de gelada.", preco: 11.0 },
+      { id: "prod-4", image: "🍫", nome: "Broto de Nutella", descricao: "Pizza brotinho coberta com Nutella e morangos.", preco: 25.5, ehNovo: true }
+    ],
+    avaliacoes: [
+      { id: "av-1", autor: "Carlos Silva", avatar: "👨🏽", nota: 5, data: "Há 2 dias", comentario: "A melhor pizza da região! Massa no ponto certo." },
+      { id: "av-2", autor: "Ana Clara", avatar: "👩🏻", nota: 4, data: "Há 1 semana", comentario: "Muito boa, mas o refrigerante podia estar mais gelado." }
+    ],
+    posts: [
+      { id: "p1", conteudoVisual: "👩‍🍳", texto: "Nossa nova pizzaiola em ação!", data: "Hoje", curtidas: 34 },
+      { id: "p2", conteudoVisual: "🍕", texto: "Adoro a Pizza de Vocês!", data: "Hoje", curtidas: 120 }
+    ],
+    topicos: [
+      {
+        id: "t1", autor: "Lucas M.", avatar: "👨🏻‍💻", titulo: "A pizzaria tem opção sem glúten?", texto: "Alguém sabe me dizer se o cardápio oferece opções seguras para celíacos?", data: "Há 3 horas",
+        respostas: [
+          { id: "r1", autor: "Pizzaria do Zé", avatar: "🍕", texto: "Olá, Lucas! No momento nossas massas tradicionais contêm glúten, mas estamos desenvolvendo uma massa especial que lançaremos no mês que vem!", data: "Há 1 hora" }
+        ]
+      }
+    ]
+  },
+  {
+    id: 2, // Acessível via /loja/2
+    name: "Burger do Chef",
+    emoji: "🍔",
+    rating: 4.9,
+    followers: 342,
+    category: "Alimentação · Lanches",
+    isOpen: false, // Esta vai aparecer como FECHADA!
+    windows: [true, false, true, false],              
+    primary: "vermelho-pimenta", 
+    secondary: "amarelo-mostarda",       
+    produtos: [
+      { id: "b-1", image: "🍔", nome: "Monster Burger", descricao: "Dois blends de 150g, muito queijo cheddar e bacon artesanal.", preco: 38.0, ehNovo: true },
+      { id: "b-2", image: "🍟", nome: "Batata Frita Rústica", descricao: "Porção de batatas fritas temperadas com páprica e alecrim.", preco: 16.0 }
+    ],
+    avaliacoes: [
+      { id: "av-3", autor: "Pedro Souza", avatar: "👨🏻", nota: 5, data: "Há 1 hora", comentario: "O ponto da carne veio perfeito! Hamburgueria sensacional." }
+    ],
+    posts: [
+      { id: "p3", conteudoVisual: "🔥", texto: "Chapa quente por aqui! Preparando os blends do dia.", data: "Ontem", curtidas: 89 }
+    ],
+    topicos: [
+      {
+        id: "t1", autor: "Lucas M.", avatar: "👨🏻‍💻", titulo: "A pizzaria tem opção sem glúten?", texto: "Alguém sabe me dizer se o cardápio oferece opções seguras para celíacos?", data: "Há 3 horas",
+        respostas: [
+          { id: "r1", autor: "Pizzaria do Zé", avatar: "🍕", texto: "Olá, Lucas! No momento nossas massas tradicionais contêm glúten, mas estamos desenvolvendo uma massa especial que lançaremos no mês que vem!", data: "Há 1 hora" }
+        ]
+      }
+    ]
+  }
+];
 
-  const lista = [
-  { id: 1, nome: "Pão Francês", preco: 1.00, imagem: "https://picsum.photos/200?random=1" },
-  { id: 2, nome: "Bolo", preco: 15.00, imagem: "https://picsum.photos/200?random=2" },
-  { id: 3, nome: "Pingado", preco: 3.00, imagem: "https://picsum.photos/200?random=3" },
-  { id: 4, nome: "Mussarela", preco: 12.00, imagem: "https://picsum.photos/200?random=4" }
-  ];
+export const Loja = () => {
+  // 1. Captura o ID vindo da URL (ex: /loja/1 ou /loja/2)
+  const { id } = useParams<{ id: string }>();
+
+  const [abaAtiva, setAbaAtiva] = useState<string>("catalogo");
+
+  // 2. Faz a busca linear (.find) convertendo o ID da URL para número
+  const lojaAtual = todasAsLojas.find((l) => l.id === Number(id));
+
+  // 3. Tratamento de erro caso o usuário digite um ID que não existe (ex: /loja/999)
+  if (!lojaAtual) {
+    return (
+      <div className="w-full min-h-screen flex flex-col items-center justify-center bg-areia/20 p-4 text-center">
+        <span className="text-6xl mb-4">🔍</span>
+        <h1 className="text-2xl font-black text-marrom-rustico">Estabelecimento não encontrado</h1>
+        <p className="text-cafe-expresso/60 text-sm mt-1">O link que você acessou pode estar quebrado ou a loja não existe.</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-creme-suave">
-      <img
-        src="https://picsum.photos/1200/400"
-        alt="Foto ilustrativa"
-        className="w-full h-[40vh] object-cover mask-image-[linear-gradient(to_bottom,rgba(0,0,0,1)_50%,rgba(0,0,0,0)_100%)]"
+    <div className="w-full min-h-screen bg-linear-to-b from-white to-areia/10 pb-20">
+      {/* Passando a loja encontrada dinamicamente */}
+      <LojaHeader 
+        loja={lojaAtual} 
+        aba={abaAtiva} 
+        setAbaAtiva={setAbaAtiva} 
       />
-      
-      <div className="max-w-7xl mx-auto w-full px-8 py-8 flex justify-between items-end">
-        <div className="flex items-center gap-8">
-          <img
-            src="https://picsum.photos/200"
-            alt="Foto de Perfil"
-            className="w-32 h-32 rounded-full border-4 border-creme-suave shadow-lg z-10 -mt-16"
-          />
-          <div className="">
-            <h1 className="text-5xl font-bold text-marrom-rustico">Padaria do Seu Zé</h1>
-            <p className="text-cafe-expresso">Alimentação • 4.8 Estrelas</p>
-          </div>
 
-        </div>
-        <BotaoPrincipal texto="+ Seguir" />
-      </div>
-      
-      <nav className="sticky top-20 z-40 bg-creme-suave/80 backdrop-blur-md py-4 border-b border-marrom-rustico/10">
-        <div className="flex gap-8">
-          <BotaoPrincipal texto="Catálogo" onClick={() => setAbaAtiva("catalogo")} ativo={abaAtiva === "catalogo"} />
-          <BotaoPrincipal texto="Ofertas" onClick={() => setAbaAtiva("ofertas")} ativo={abaAtiva === "ofertas"} />
-          <BotaoPrincipal texto="Comunidade" onClick={() => setAbaAtiva("comunidade")} ativo={abaAtiva === "comunidade"} />
-
-        </div>
-      </nav>
-      
-      <div className="max-w-7xl mx-auto px-8 py-12">
-        {abaAtiva==="catalogo" && (<div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {lista.map((item) => (
-            <div key={item.id} className="flex flex-col justify-between h-full gap-4 border border-marrom-rustico/10 p-6 rounded-xl">
-              <img 
-                src={item.imagem} 
-                alt={item.nome} 
-                className="w-full h-32 object-cover rounded-md" 
-              />
-              
-              <div className="flex flex-col gap-1 mt-auto">
-                <h1 className="text-verde-salvia font-bold">{item.nome}</h1>
-                <p className="text-cafe-expresso">R$ {item.preco}</p>
-              </div>
-
-            </div>
-          ))}
+      <main className="container mx-auto">
+        {abaAtiva === "catalogo" && (
+          <LojaProdutos produtos={lojaAtual.produtos} />
+        )}
         
-        </div>
+        {abaAtiva === "avaliacoes" && (
+          <LojaAvaliacoes avaliacoes={lojaAtual.avaliacoes} />
+        )}
+        
+        {abaAtiva === "posts" && (
+          <LojaPosts posts={lojaAtual.posts} />
         )}
 
-        {abaAtiva==="comunidade" && (<div className="w-full max-w-2xl mx-auto flex flex-col py-12 relative">
-          <div className="absolute left-8 top-0 bottom-0 w-px bg-linear-to-b from-transparent via-marrom-rustico/80 to-transparent" />
-          <PostComunidade texto="Hoje fui na padaria e comprei um pão quentinho!" autor="Anônimo" />
-          <PostComunidade texto="Hoje fui na padaria e comprei um pão quentinho!" autor="Anônimo2" />
-        </div>
+        {abaAtiva === "comunidade" && (
+          <LojaComunidade topicos={lojaAtual.topicos} />
         )}
-      </div>
-      
+      </main>
     </div>
   );
 };

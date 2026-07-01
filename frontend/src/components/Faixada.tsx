@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { buildLojaColors } from "../utils/colorUtils";
 
 /* ===================== TIPAGENS ===================== */
 export interface Loja {
@@ -19,44 +20,6 @@ export interface Loja {
 
 interface StoreStreetProps {
     listaDeLojas: Loja[];
-}
-
-/* ===================== UTILS DE COR ===================== */
-function hexToRgb(hex: string): [number, number, number] {
-    const clean = hex.replace("#", "");
-    const full = clean.length === 3 ? clean.split("").map((c) => c + c).join("") : clean;
-    const bigint = parseInt(full, 16);
-    return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
-}
-
-function lighten(hex: string, amount: number): string {
-    const [r, g, b] = hexToRgb(hex);
-    const mix = (c: number) => Math.round(c + (255 - c) * amount);
-    return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
-}
-
-function lightenAlpha(hex: string, amount: number, alpha: number): string {
-    const [r, g, b] = hexToRgb(hex);
-    const mix = (c: number) => Math.round(c + (255 - c) * amount);
-    return `rgba(${mix(r)}, ${mix(g)}, ${mix(b)}, ${alpha})`;
-}
-
-function darkenAlpha(hex: string, amount: number, alpha: number): string {
-    const [r, g, b] = hexToRgb(hex);
-    const mix = (c: number) => Math.round(c * (1 - amount));
-    return `rgba(${mix(r)}, ${mix(g)}, ${mix(b)}, ${alpha})`;
-}
-
-function buildLojaColors(primary: string, secondary: string) {
-    return {
-        wallBg: lighten(secondary, 0.45),
-        awningBg: primary,
-        signColor: lighten(primary, 0.6),
-        winBorder: darkenAlpha(primary, 0.3, 0.2),
-        winLit: lightenAlpha(primary, 0.35, 0.65),
-        doorBorder: darkenAlpha(primary, 0.3, 0.2),
-        doorBg: darkenAlpha(primary, 0.5, 0.09),
-    };
 }
 
 /* ===================== CONSTANTES CENÁRIO ===================== */
@@ -86,7 +49,7 @@ const Cloud = ({ className }: { className: string }) => (
     <div className={`absolute ${className}`}>
         <div className="absolute inset-0 bg-white/90 rounded-full" />
         <div className="absolute -top-1/2 left-[10%] w-[45%] h-[150%] bg-white/90 rounded-full" />
-        <div className="absolute -top-[40%] left-[42%] w-[35%] h-[120%] bg-white/90 rounded-full" />
+        <div className="absolute top-[-40%] left-[42%] w-[35%] h-[120%] bg-white/90 rounded-full" />
     </div>
 );
 
@@ -95,27 +58,27 @@ const StreetBuilding = ({ loja }: { loja: Loja }) => {
     return (
         <Link
             to={`/loja/${loja.id}`}
-            className="flex-shrink-0 w-[174px] px-1.5 flex flex-col items-center cursor-pointer transition-transform duration-300 hover:-translate-y-2 group"
+            className="shrink-0 w-43.5 px-1.5 flex flex-col items-center cursor-pointer transition-transform duration-300 hover:-translate-y-2 group"
         >
-            <div className="relative z-10 w-[162px] max-w-[162px] text-center text-[11.5px] font-bold px-3 py-1.5 rounded-t-md whitespace-nowrap overflow-hidden text-ellipsis tracking-wide bg-[#2A1F14]" style={{ fontFamily: "Fraunces, Georgia, serif", color: c.signColor }}>
+            <div className="relative z-10 w-40.5 max-w-40.5 text-center text-[11.5px] font-bold px-3 py-1.5 rounded-t-md whitespace-nowrap overflow-hidden text-ellipsis tracking-wide bg-[#2A1F14]" style={{ fontFamily: "Fraunces, Georgia, serif", color: c.signColor }}>
                 {loja.name}
                 <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0.5 h-2 bg-[#2A1F14]" />
             </div>
-            <div className="w-[162px] mt-2 rounded-t-md overflow-hidden relative shadow-[-2px_0_8px_rgba(0,0,0,0.08),2px_0_8px_rgba(0,0,0,0.06)] transition-shadow duration-300 group-hover:shadow-[-4px_0_16px_rgba(0,0,0,0.13),4px_0_16px_rgba(0,0,0,0.1)]">
+            <div className="w-40.5 mt-2 rounded-t-md overflow-hidden relative shadow-[-2px_0_8px_rgba(0,0,0,0.08),2px_0_8px_rgba(0,0,0,0.06)] transition-shadow duration-300 group-hover:shadow-[-4px_0_16px_rgba(0,0,0,0.13),4px_0_16px_rgba(0,0,0,0.1)]">
                 <div className={`flex justify-center gap-2 px-3 ${loja.tall ? "pt-5" : "pt-3"} pb-1.5`} style={{ background: c.wallBg }}>
                     {loja.windows.map((lit, i) => (
-                        <div key={i} className="w-[26px] h-7 rounded-t-sm border-2 flex-shrink-0" style={{ borderColor: c.winBorder, background: lit ? c.winLit : "rgba(255,255,255,.55)" }} />
+                        <div key={i} className="w-6.5 h-7 rounded-t-sm border-2 shrink-0" style={{ borderColor: c.winBorder, background: lit ? c.winLit : "rgba(255,255,255,.55)" }} />
                     ))}
                 </div>
-                <div className="h-[22px] -mx-px relative overflow-hidden" style={{ background: c.awningBg }}>
-                    <div className="absolute bottom-0 left-0 right-0 h-[7px]" style={{ background: "repeating-linear-gradient(90deg, rgba(0,0,0,.1) 0, rgba(0,0,0,.1) 13px, transparent 13px, transparent 26px)" }} />
+                <div className="h-5.5 -mx-px relative overflow-hidden" style={{ background: c.awningBg }}>
+                    <div className="absolute bottom-0 left-0 right-0 h-1.75" style={{ background: "repeating-linear-gradient(90deg, rgba(0,0,0,.1) 0, rgba(0,0,0,.1) 13px, transparent 13px, transparent 26px)" }} />
                 </div>
                 <div className="px-3 pt-2 flex items-end justify-center gap-2.5" style={{ background: c.wallBg }}>
                     <span className="text-[30px] leading-none mb-1">{loja.emoji}</span>
-                    <div className="w-[34px] h-[46px] rounded-t-[4px] border-2 flex-shrink-0" style={{ borderColor: c.doorBorder, background: c.doorBg }} />
+                    <div className="w-8.5 h-11.5 rounded-t-sm border-2 shrink-0" style={{ borderColor: c.doorBorder, background: c.doorBg }} />
                 </div>
             </div>
-            <div className="w-[162px] bg-white rounded-b px-2.5 py-1.5 flex items-center justify-between text-[10.5px] font-semibold text-[#6B5040] shadow-[0_2px_8px_rgba(0,0,0,0.07)]">
+            <div className="w-40.5 bg-white rounded-b px-2.5 py-1.5 flex items-center justify-between text-[10.5px] font-semibold text-[#6B5040] shadow-[0_2px_8px_rgba(0,0,0,0.07)]">
                 <span><span className="text-[#C88C10]">★</span> {loja.rating}</span>
                 <span>{loja.followers} seguidores</span>
             </div>
@@ -140,7 +103,7 @@ export const Faixada = ({ listaDeLojas }: StoreStreetProps) => {
     return (
         <div className="space-y-5">
             {/* Chips de Categoria */}
-            <div className="bg-white border-b border-black/[0.08] py-3.5 px-7 flex flex-col items-start gap-3">
+            <div className="bg-white border-b border-black/8 py-3.5 px-7 flex flex-col items-start gap-3">
 
                 {/* O título agora fica no topo sozinho, adicionado um leve margin-bottom se quiser espaçar mais */}
                 <span className="text-[11px] font-extrabold uppercase tracking-[1.2px] text-[#9E8878] whitespace-nowrap mb-1">
@@ -156,7 +119,7 @@ export const Faixada = ({ listaDeLojas }: StoreStreetProps) => {
                             onClick={() => setCategoriaAtiva(cat)}
                             className={`whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-bold border-[1.5px] transition-all duration-200 cursor-pointer ${cat === categoriaAtiva
                                 ? "bg-[#D85A30] text-white border-[#D85A30]"
-                                : "bg-[#F2EDE6] text-[#6B5040] border-black/[0.08] hover:border-[#D85A30] hover:text-[#D85A30] hover:bg-[#FAECE7]"
+                                : "bg-[#F2EDE6] text-[#6B5040] border-black/8 hover:border-[#D85A30] hover:text-[#D85A30] hover:bg-[#FAECE7]"
                                 }`}
                         >
                             {cat}
@@ -167,19 +130,19 @@ export const Faixada = ({ listaDeLojas }: StoreStreetProps) => {
 
             {/* Cenário de Rua */}
             <section className="relative overflow-hidden">
-                <div className="relative overflow-hidden flex items-end min-h-[320px] px-7" style={{ background: "linear-gradient(180deg, #7FC8E8 0%, #B8E0F5 40%, #D8EEF8 100%)" }}>
-                    <div className="absolute right-[90px] top-[22px] w-14 h-14 rounded-full z-[1]" style={{ background: "radial-gradient(circle at 40% 40%, #FFE888, #FFB820)", boxShadow: "0 0 0 12px rgba(255,210,60,.15), 0 0 0 28px rgba(255,210,60,.07)" }} />
-                    <Cloud className="top-8 left-[12%] w-[90px] h-7" />
-                    <Cloud className="top-[55px] left-[38%] w-[70px] h-[22px]" />
-                    <Cloud className="top-7 left-[65%] w-[110px] h-[34px]" />
+                <div className="relative overflow-hidden flex items-end min-h-80 px-7" style={{ background: "linear-gradient(180deg, #7FC8E8 0%, #B8E0F5 40%, #D8EEF8 100%)" }}>
+                    <div className="absolute right-22.5 top-5.5 w-14 h-14 rounded-full z-1" style={{ background: "radial-gradient(circle at 40% 40%, #FFE888, #FFB820)", boxShadow: "0 0 0 12px rgba(255,210,60,.15), 0 0 0 28px rgba(255,210,60,.07)" }} />
+                    <Cloud className="top-8 left-[12%] w-22.5 h-7" />
+                    <Cloud className="top-13.75 left-[38%] w-17.5 h-5.5" />
+                    <Cloud className="top-7 left-[65%] w-27.5 h-8.5" />
 
-                    <svg className="absolute bottom-0 left-0 right-0 h-20 z-[1] pointer-events-none" viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg className="absolute bottom-0 left-0 right-0 h-20 z-1 pointer-events-none" viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
                         {skylineRects.map(([x, y, w, h, o], i) => (
                             <rect key={i} x={x} y={y} width={w} height={h} fill={`rgba(100,130,160,${o})`} rx={2} />
                         ))}
                     </svg>
 
-                    <div className="flex items-end w-full overflow-x-auto relative z-[3] scrollbar-none">
+                    <div className="flex items-end w-full overflow-x-auto relative z-3 scrollbar-none">
                         {lojasFiltradas.map((loja) => (
                             <StreetBuilding key={loja.id} loja={loja} />
                         ))}
@@ -192,10 +155,10 @@ export const Faixada = ({ listaDeLojas }: StoreStreetProps) => {
                 </div>
 
                 {/* Calçada */}
-                <div className="relative z-[3] h-[54px] flex items-center px-7 border-t-[3px]" style={{ background: "linear-gradient(180deg, #D4C4A8 0%, #C0B09A 100%)", borderTopColor: "#D8C8B0" }}>
+                <div className="relative z-3 h-13.5 flex items-center px-7 border-t-[3px]" style={{ background: "linear-gradient(180deg, #D4C4A8 0%, #C0B09A 100%)", borderTopColor: "#D8C8B0" }}>
                     <div className="flex w-full items-end overflow-x-auto scrollbar-none">
                         {sidewalkItems.map((item, i) => (
-                            <div key={i} className="flex-shrink-0 w-[174px] flex justify-center px-1.5">
+                            <div key={i} className="shrink-0 w-43.5 flex justify-center px-1.5">
                                 <span className="text-3xl leading-none drop-shadow-md">{item}</span>
                             </div>
                         ))}
@@ -203,7 +166,7 @@ export const Faixada = ({ listaDeLojas }: StoreStreetProps) => {
                 </div>
 
                 {/* Rua */}
-                <div className="relative h-9 z-[2]" style={{ background: "#5E7080" }}>
+                <div className="relative h-9 z-2" style={{ background: "#5E7080" }}>
                     <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1" style={{ background: "repeating-linear-gradient(90deg, #FFE066 0, #FFE066 40px, transparent 40px, transparent 80px)" }} />
                 </div>
             </section>

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { NewPredioLoja } from "../components/NewPredioLoja";
+import { NewPredioLoja } from "../components/PredioLoja";
 
 const EMOJIS_POR_CATEGORIA: Record<string, string[]> = {
     Alimentação: ["🍕", "🍔", "🥐", "🍩", "🍣", "🍦", "🎂", "☕", "🍺"],
@@ -127,7 +127,7 @@ export const CadastroLoja = () => {
                                     key={opçãoEmoji}
                                     type="button"
                                     onClick={() => setEmoji(opçãoEmoji)}
-                                    className={`text-2xl p-2 rounded-xl transition-all hover:scale-110 cursor-pointer ${emoji === opçãoEmoji ? "bg-[#D85A30]/10 border-2 border-[#D85A30]" : "bg-white border border-black/[0.05] hover:bg-gray-50"
+                                    className={`text-2xl p-2 rounded-xl transition-all hover:scale-110 cursor-pointer ${emoji === opçãoEmoji ? "bg-[#D85A30]/10 border-2 border-[#D85A30]" : "bg-white border border-black/5 hover:bg-gray-50"
                                         }`}
                                 >
                                     {opçãoEmoji}
@@ -188,7 +188,7 @@ export const CadastroLoja = () => {
                     </button>
                 </form>
 
-                <div className="md:col-span-2 bg-gradient-to-b from-[#7FC8E8] to-[#D8EEF8] border border-marrom-rustico/10 rounded-2xl p-8 flex flex-col items-center justify-center min-h-[340px] shadow-inner relative overflow-hidden">
+                <div className="md:col-span-2 bg-linear-to-b from-[#7FC8E8] to-[#D8EEF8] border border-marrom-rustico/10 rounded-2xl p-8 flex flex-col items-center justify-center min-h-85 shadow-inner relative overflow-hidden">
                     <span className="absolute top-3 left-4 text-[10px] font-extrabold uppercase tracking-widest text-sky-950/50">
                         Visualização na Rua
                     </span>

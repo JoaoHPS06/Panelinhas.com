@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { BotaoPrincipal } from "../components/BotaoPrincipal";
-import { NewPredioLoja, type Loja } from "../components/NewPredioLoja";
+import { NewPredioLoja, type LojaData } from "../components/PredioLoja";
 
-const LOJAS_MOCK: Loja[] = [
+const LOJAS_MOCK: LojaData[] = [
   {
     id: 1,
     name: "Pizzaria do Zé",
@@ -34,10 +34,10 @@ const LOJAS_MOCK: Loja[] = [
 
 /** Esqueleto no formato de um prédio, exibido enquanto a lista carrega */
 const BuildingSkeleton = () => (
-  <div className="w-[162px] flex flex-col items-center gap-2 animate-pulse">
-    <div className="w-[162px] h-7 rounded-t-md bg-marrom-rustico/15" />
-    <div className="w-[162px] h-[108px] rounded-t-md bg-marrom-rustico/10" />
-    <div className="w-[162px] h-7 rounded-b bg-marrom-rustico/10" />
+  <div className="w-40.5 flex flex-col items-center gap-2 animate-pulse">
+    <div className="w-40.5 h-7 rounded-t-md bg-marrom-rustico/15" />
+    <div className="w-40.5 h-27 rounded-t-md bg-marrom-rustico/10" />
+    <div className="w-40.5 h-7 rounded-b bg-marrom-rustico/10" />
   </div>
 );
 
@@ -59,7 +59,7 @@ const FaixaDeCalcada = () => (
 
 export const MinhasLojas = () => {
   const navigate = useNavigate();
-  const [lojasDoUsuario, setLojasDoUsuario] = useState<Loja[]>([]);
+  const [lojasDoUsuario, setLojasDoUsuario] = useState<LojaData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -118,7 +118,7 @@ export const MinhasLojas = () => {
             {[1, 2, 3].map((i) => (
               <div
                 key={i}
-                className="bg-white border border-marrom-rustico/10 p-5 rounded-2xl shadow-sm h-[76px] animate-pulse"
+                className="bg-white border border-marrom-rustico/10 p-5 rounded-2xl shadow-sm h-19 animate-pulse"
               />
             ))}
           </div>

@@ -1,0 +1,50 @@
+interface CardProdutoProps {
+  image: string; // O emoji do produto
+  nome: string;
+  descricao: string;
+  preco: number;
+  ehNovo?: boolean; // Determina se a tag verde vai aparecer
+}
+
+export const CardProduto = ({ image, nome, descricao, preco, ehNovo }: CardProdutoProps) => {
+  return (
+    <div 
+      onMouseMove={(e) => typeof window !== 'undefined' && (window as any).tilt?.(e.nativeEvent, e.currentTarget)} 
+      onMouseLeave={(e) => typeof window !== 'undefined' && (window as any).resetTilt?.(e.currentTarget)}
+      className="tilt-card bg-white rounded-2xl overflow-visible shadow-[0_8px_24px_rgba(45,26,13,0.04)] border border-creme-suave relative cursor-pointer group"
+    >
+      
+      {/* TAG DE NOVO (Canto Superior Esquerdo) */}
+      {ehNovo && (
+        <div className="absolute -top-2 -left-2 bg-verde-salvia text-white text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-lg shadow-md z-20 animate-bounce">
+          Novo
+        </div>
+      )}
+
+      <div className="tilt-content flex flex-col h-full">
+        {/* Container da Imagem/Emoji */}
+        <div className="p-3 pb-0">
+          <div className="h-36 bg-linear-to-br from-areia to-amarelo-mostarda/40 rounded-xl flex items-center justify-center text-6xl relative overflow-hidden transition-transform duration-300 group-hover:scale-105">
+            {image}
+          </div>
+        </div>
+
+        {/* Textos e Informações */}
+        <div className="p-5 flex flex-col flex-1 text-center justify-center">
+          <h3 className="text-base font-extrabold text-marrom-rustico mb-1.5 leading-tight">
+            {nome}
+          </h3>
+          
+          <p className="text-cafe-expresso/60 text-sm leading-snug mb-3 flex-1">
+            {descricao}
+          </p>
+          
+          {/* Preço formatado como R$ 00,00 */}
+          <div className="text-xl font-black text-vermelho-pimenta">
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(preco)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
