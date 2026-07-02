@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Carrossel } from "./Carrossel";
 //import { CardLoja } from "./CardLoja";
-import { PredioLoja } from "./PredioLoja";
+import { NewPredioLoja, type Loja } from "./PredioLoja";
 import artePadaria from '../assets/padaria.png';
 import { Faixada } from "./Faixada";
 
@@ -130,11 +130,7 @@ export const Home = () => {
       <Carrossel />
 
       <Faixada listaDeLojas={lojasFiltradas} />
-      <PredioLoja
-        imagem={artePadaria}
-        nome="Padaria do Zé"
-        posicao=""
-      />
+      <NewPredioLoja loja={lojas[0]}/>
     </div>
   );
 };
