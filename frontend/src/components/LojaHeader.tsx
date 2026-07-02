@@ -1,13 +1,15 @@
 import { BotaoPrincipal } from "./BotaoPrincipal.tsx";
-import { type LojaData } from "./PredioLoja.tsx"; // Atualizado aqui
+import { type LojaData } from "./PredioLoja.tsx";
 
 interface LojaHeaderProps {
-  loja: LojaData; // Atualizado aqui
+  loja: LojaData; 
   aba: string;
   setAbaAtiva: (novaAba: string) => void;
+  onContatoClick: () => void;
+  onVoltar: () => void;
 }
 
-export const LojaHeader = ({ loja, aba, setAbaAtiva } : LojaHeaderProps) => {
+export const LojaHeader = ({ loja, aba, setAbaAtiva, onContatoClick, onVoltar } : LojaHeaderProps) => {
     return(
         <>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[150%] h-150 bg-linear-to-br from-areia/50 to-amarelo-mostarda/10 rounded-b-full blur-3xl -z-10 pointer-events-none"></div>
@@ -18,11 +20,20 @@ export const LojaHeader = ({ loja, aba, setAbaAtiva } : LojaHeaderProps) => {
                 <span className="relative z-10 drop-shadow-sm">{loja.emoji}</span>
                 
                 <div className="absolute top-6 left-0 right-0 max-w-6xl mx-auto px-4 md:px-8 pointer-events-none">
-                    <button className="pointer-events-auto flex items-center gap-2 bg-white/70 hover:bg-white/90 backdrop-blur-md border border-white/80 transition-all duration-300 rounded-full px-5 py-2.5 text-sm font-bold text-cafe-expresso shadow-sm hover:shadow-md cursor-pointer">
+                    <button 
+                        onClick={onVoltar}
+                        className="pointer-events-auto flex items-center gap-2 bg-white/70 hover:bg-white/90 backdrop-blur-md border border-white/80 transition-all duration-300 rounded-full px-5 py-2.5 text-sm font-bold text-cafe-expresso shadow-sm hover:shadow-md cursor-pointer">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M19 12H5M12 5l-7 7 7 7"/>
                         </svg>
                         Voltar
+                    </button>
+
+                    <button 
+                        onClick={onContatoClick}
+                        className="pointer-events-auto flex items-center gap-2 bg-marrom-rustico hover:bg-marrom-rustico/90 text-white transition-all duration-300 rounded-full px-6 py-2.5 text-sm font-bold shadow-md cursor-pointer hover:-translate-y-0.5"
+                    >
+                        <span>📞</span> Contato
                     </button>
                 </div>
             </div>
