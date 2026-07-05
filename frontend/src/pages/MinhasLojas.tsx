@@ -3,35 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { BotaoPrincipal } from "../components/BotaoPrincipal";
 import { NewPredioLoja, type LojaData } from "../components/PredioLoja";
 
-const LOJAS_MOCK: LojaData[] = [
-  {
-    id: 1,
-    name: "Pizzaria do Zé",
-    category: "🍽️ Alimentação",
-    emoji: "🍕",
-    rating: 4.8,
-    followers: 127,
-    isOpen: true,
-    windows: [true, false, true],
-    primary: "#E2703A",
-    secondary: "#FFD9A8",
-    description: "A melhor pizza de fermentação natural da rua virtual!",
-  },
-  {
-    id: 6,
-    name: "Padaria Estrela",
-    category: "🍽️ Alimentação",
-    emoji: "🥐",
-    rating: 4.8,
-    followers: 178,
-    isOpen: true,
-    windows: [true, false, true],
-    primary: "#C99020",
-    secondary: "#FFF2C4",
-    description: "Pães quentinhos e doces artesanais saindo a toda hora.",
-  },
-];
-
 /** Esqueleto no formato de um prédio, exibido enquanto a lista carrega */
 const BuildingSkeleton = () => (
   <div className="w-40.5 flex flex-col items-center gap-2 animate-pulse">
@@ -61,14 +32,38 @@ export const MinhasLojas = () => {
   const navigate = useNavigate();
   const [lojasDoUsuario, setLojasDoUsuario] = useState<LojaData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
-    const temporizador = setTimeout(() => {
-      setLojasDoUsuario(LOJAS_MOCK);
-      setLoading(false);
-    }, 800);
+    const buscarLojas = async () => {
+      setLoading(true);
+      setErro("");
 
-    return () => clearTimeout(temporizador);
+      const user = JSON.parse(localStorage.getItem("Panelinha_user") || "{}");
+      const userId = user.id || user.email || null;
+
+      try {
+        const url = userId
+          ? `http://localhost:8000/api/lojas/?userId=${encodeURIComponent(userId)}`
+          : "http://localhost:8000/api/lojas/";
+
+        const res = await fetch(url);
+
+        if (!res.ok) {
+          throw new Error("Não foi possível carregar suas lojas.");
+        }
+
+        const data = await res.json();
+        setLojasDoUsuario(data);
+      } catch (err: any) {
+        console.error("Erro ao buscar lojas:", err);
+        setErro(err.message || "Erro ao conectar com o servidor.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    buscarLojas();
   }, []);
 
   const totalSeguidores = lojasDoUsuario.reduce(
@@ -111,6 +106,12 @@ export const MinhasLojas = () => {
           />
         </div>
       </div>
+
+      {erro && (
+        <p className="text-red-500 text-sm font-semibold bg-red-50 p-3 rounded-xl border border-red-200">
+          {erro}
+        </p>
+      )}
 
       {loading ? (
         <div className="space-y-8">
