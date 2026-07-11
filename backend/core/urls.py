@@ -30,5 +30,5 @@ urlpatterns = [
     # Rota para renovar o token expirado
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path("", include("contas.urls")),
-
+    path('api/', include('lojas.urls')), 
 ]
