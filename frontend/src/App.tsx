@@ -6,6 +6,7 @@ import { Register } from "./pages/Register";
 import { Home } from "./components/Home";
 import { CadastroLoja } from "./pages/CadastroLoja";
 import { MinhasLojas } from "./pages/MinhasLojas";
+import { Explore } from "./pages/Explore"
 
 // 1. Layout Base
 const LayoutComNavbar = () => {
@@ -60,6 +61,7 @@ function App() {
           {/* BLOCO 2: Rotas Públicas (Com Navbar) */}
           <Route element={<LayoutComNavbar />}>
             <Route path="/" element={<PaginaInicial />} />
+            <Route path="/explore" element={<Explore />} />
           </Route>
 
           {/* BLOCO 3: Rotas Privadas (Protegidas por Login) */}
