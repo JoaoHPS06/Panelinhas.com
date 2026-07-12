@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response 
 from .models import Loja, Produto
 from .serializers import LojaSerializer, ProdutoSerializer
+from django.shortcuts import get_object_or_404
 
 class LojaViewSet(viewsets.ModelViewSet):
     queryset = Loja.objects.all()
@@ -11,8 +12,6 @@ class LojaViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        if hasattr(self.request.user, 'minha_loja'):
-            raise ValidationError({"detail": "Você já possui uma loja cadastrada."})
         serializer.save(dono=self.request.user)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
@@ -54,9 +53,14 @@ class ProdutoViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        # Garante que o usuário tem uma loja antes de cadastrar o produto
-        if not hasattr(self.request.user, 'minha_loja'):
-            raise ValidationError({"detail": "Você precisa cadastrar uma loja primeiro."})
+        # 1. Pega o ID da loja que o React enviou no JSON
+        loja_id = self.request.data.get('loja')
         
-        # O produto é vinculado automaticamente à loja do usuário logado
-        serializer.save(loja=self.request.user.minha_loja)
+        if not loja_id:
+            raise ValidationError({"detail": "O ID da loja é obrigatório para cadastrar o produto."})
+            
+        # 2. Busca a loja no banco. Se a loja não for desse usuário, ele dá erro 404 automaticamente
+        loja = get_object_or_404(Loja, id=loja_id, dono=self.request.user)
+        
+        # 3. Salva o produto vinculando a essa loja exata
+        serializer.save(loja=loja)

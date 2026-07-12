@@ -4,6 +4,8 @@ from rest_framework.exceptions import PermissionDenied, ValidationError
 from django.utils import timezone
 from .models import Post, Avaliacao, Pergunta
 from .serializers import PostSerializer, AvaliacaoSerializer, PerguntaSerializer
+from django.shortcuts import get_object_or_404
+from lojas.models import Loja 
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
@@ -11,12 +13,18 @@ class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        # Bloqueia quem não tem loja de criar post
-        if not hasattr(self.request.user, 'minha_loja'):
-            raise PermissionDenied("Apenas donos de estabelecimentos podem criar posts.")
+        loja_id = self.request.data.get('loja')
+        # Garante que a loja existe e pertence ao usuário
+        loja = get_object_or_404(Loja, id=loja_id, dono=self.request.user)
+        serializer.save(loja=loja)
 
-        # Salva a loja que criou o post no JSON
-        serializer.save(loja=self.request.user.minha_loja)
+    def get_queryset(self):
+        """Permite que o React filtre os posts usando ?loja=ID na URL"""
+        queryset = super().get_queryset()
+        loja_id = self.request.query_params.get('loja')
+        if loja_id:
+            queryset = queryset.filter(loja_id=loja_id).order_by('-criado_em')
+        return queryset
 
 
 class AvaliacaoViewSet(viewsets.ModelViewSet):
@@ -25,15 +33,12 @@ class AvaliacaoViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        # Bloqueia quem tem loja de criar avaliações
-        if hasattr(self.request.user, 'minha_loja'):
+        # A nova forma de verificar se o usuário é dono de alguma loja
+        if self.request.user.minhas_lojas.exists():
             raise PermissionDenied("Donos de loja não podem avaliar estabelecimentos.")
-        
-        # Salva o usuário que criou a avaliação no JSON
         serializer.save(usuario=self.request.user)
 
     def get_queryset(self):
-        """Permite que o React filtre os dados usando ?loja=ID na URL"""
         queryset = super().get_queryset()
         loja_id = self.request.query_params.get('loja')
         if loja_id:
@@ -47,18 +52,21 @@ class PerguntaViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        if hasattr(self.request.user, 'minha_loja'):
-        # Bloqueia quem tem loja de criar perguntas
+        if self.request.user.minhas_lojas.exists():
             raise PermissionDenied("Donos de loja não podem fazer perguntas.")
         serializer.save(autor=self.request.user)
 
     def perform_update(self, serializer):
         pergunta = self.get_object()
-        
-        # Apenas o dono daquela loja pode responder
-        # Verifica se o usuário tem loja e se a loja é a mesma da pergunta
-        if not hasattr(self.request.user, 'minha_loja') or self.request.user.minha_loja != pergunta.loja:
+        # Verifica se o dono daquela loja específica é o usuário logado
+        if pergunta.loja.dono != self.request.user:
             raise PermissionDenied("Acesso negado. Você só pode responder perguntas da sua própria loja.")
-        
-        # Salva a data de resposta automaticamente no JSON
         serializer.save(respondido_em=timezone.now())
+    
+    def get_queryset(self):
+        """Permite que o React filtre as perguntas usando ?loja=ID na URL"""
+        queryset = super().get_queryset()
+        loja_id = self.request.query_params.get('loja')
+        if loja_id:
+            queryset = queryset.filter(loja_id=loja_id).order_by('-criado_em')
+        return queryset

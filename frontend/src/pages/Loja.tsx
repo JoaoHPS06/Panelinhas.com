@@ -7,8 +7,8 @@ import { LojaPosts } from "../components/LojaPosts.tsx";
 import { LojaComunidade } from "../components/LojaComunidade.tsx";
 import { type LojaData } from "../components/PredioLoja.tsx";
 import { ModalContato } from "../components/ModalContato.tsx";
+import EmojiPicker from "emoji-picker-react";
 
-// Tipo estendido com o campo 'dono' para sabermos a quem a loja pertence[cite: 12]
 type LojaCompleta = LojaData & {
   telefone: string;  
   endereco: string;  
@@ -23,27 +23,40 @@ export const Loja = () => {
 
   const [abaAtiva, setAbaAtiva] = useState<string>("catalogo");
   const [isModalAberto, setIsModalAberto] = useState<boolean>(false);
-  
-  // NOVO: Controle do modal de adicionar produto[cite: 12]
   const [isModalProdutoAberto, setIsModalProdutoAberto] = useState<boolean>(false);
   
   const [lojaAtual, setLojaAtual] = useState<LojaCompleta | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [erro, setErro] = useState<string | null>(null);
 
-  // Estados do formulário do novo produto
-  const [novoProduto, setNovoProduto] = useState({ nome: "", descricao: "", preco: "", image: "📦" });
+  const [novoProduto, setNovoProduto] = useState({ nome: "", descricao: "", preco: "", emoji: "📦" });
   const [loadingProduto, setLoadingProduto] = useState(false);
 
-  // Pega o ID do usuário logado para comparar com o dono da loja
+  const [mostrarEmojis, setMostrarEmojis] = useState(false);
+
+  // 1. Pega os dados salvos no navegador
   const userString = localStorage.getItem("Panelinha_user");
   const usuarioLogado = userString ? JSON.parse(userString) : null;
-  const isOwner = lojaAtual?.dono === usuarioLogado?.id;
+  
+  // 2. MÁGICA DO JWT
+  let loggedInUserId = null;
+  if (usuarioLogado?.access) {
+    try {
+      const payloadBase64 = usuarioLogado.access.split('.')[1];
+      const decodedPayload = JSON.parse(atob(payloadBase64));
+      // Tenta pegar como 'user_id' (padrão do SimpleJWT) ou 'id'
+      loggedInUserId = decodedPayload.user_id || decodedPayload.id; 
+    } catch (e) {
+      console.error("Erro ao decodificar o token:", e);
+    }
+  }
+
+  // 3. COMPARAÇÃO BLINDADA: Transforma os dois em Texto para garantir que 13 === "13"
+  const isOwner = lojaAtual?.dono != null && loggedInUserId != null && String(lojaAtual?.dono) === String(loggedInUserId);
 
   const buscarDadosDaLoja = async () => {
     try {
       setLoading(true);
-      // Incluindo o token caso o usuário esteja logado (para a API saber quem está acessando e devolver o usuario_segue)
       const headers: any = {};
       if (usuarioLogado?.access) {
         headers["Authorization"] = `Bearer ${usuarioLogado.access}`;
@@ -54,8 +67,17 @@ export const Loja = () => {
       if (!resposta.ok) throw new Error("Estabelecimento não encontrado");
 
       const dadosBackend = await resposta.json();
+      
+      const verificarSeEhNovo = (dataCriacao: string) => {
+        if (!dataCriacao) return true; // Se o backend não mandar data, deixamos como novo por segurança
+        
+        const dataDoProduto = new Date(dataCriacao);
+        const dataSeteDiasAtras = new Date();
+        dataSeteDiasAtras.setDate(dataSeteDiasAtras.getDate() - 7); // Volta 7 dias no tempo
+        
+        return dataDoProduto >= dataSeteDiasAtras;
+      };
 
-      // ADAPTER: Traduz o JSON do Django para o formato visual[cite: 12]
       const lojaAdaptada: LojaCompleta = {
         id: dadosBackend.id,
         dono: dadosBackend.dono,
@@ -67,8 +89,8 @@ export const Loja = () => {
           nome: p.nome,
           descricao: p.descricao || "",
           preco: parseFloat(p.preco) || 0.0,
-          image: p.emoji || "📦", 
-          ehNovo: true, // Marcamos como novo para destacar
+          image: p.emoji || "📦",
+          ehNovo: verificarSeEhNovo(p.criado_em), 
         })),
 
         followers: dadosBackend.total_seguidores || 0,
@@ -95,8 +117,7 @@ export const Loja = () => {
     if (id) buscarDadosDaLoja();
   }, [id]);
 
-  // Função para enviar o produto novo para o Django
-  const handleAdicionarProduto = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAdicionarProduto = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!usuarioLogado?.access) return;
 
@@ -109,26 +130,60 @@ export const Loja = () => {
           "Authorization": `Bearer ${usuarioLogado.access}`
         },
         body: JSON.stringify({
-          loja: id, // O ID da loja atual
+          loja: id, 
           nome: novoProduto.nome,
           descricao: novoProduto.descricao,
-          preco: parseFloat(novoProduto.preco.replace(",", ".")), // Garante o formato numérico correto
-          emoji: novoProduto.image
+          preco: parseFloat(novoProduto.preco.replace(",", ".")), 
+          emoji: novoProduto.emoji
         })
       });
 
       if (res.ok) {
         setIsModalProdutoAberto(false);
-        setNovoProduto({ nome: "", descricao: "", preco: "", image: "📦" });
-        buscarDadosDaLoja(); // Recarrega a loja para mostrar o item novo!
+        setNovoProduto({ nome: "", descricao: "", preco: "", emoji: "📦" });
+        buscarDadosDaLoja(); 
       } else {
-        alert("Erro ao salvar o produto.");
+        const errorData = await res.json();
+        console.error("Erro do backend:", errorData);
+        alert("Erro ao salvar o produto. Verifique o console.");
       }
     } catch (error) {
       console.error(error);
       alert("Erro de conexão com o servidor.");
     } finally {
       setLoadingProduto(false);
+    }
+  };
+
+  // Função para Abrir/Fechar a loja
+  const handleToggleStatus = async () => {
+    if (!lojaAtual || !usuarioLogado?.access) return;
+
+    // Inverte o status atual (Se tá aberta, fecha. Se tá fechada, abre)
+    const novoStatus = !lojaAtual.isOpen;
+    
+    // Atualiza a interface na mesma hora para o usuário não ficar esperando
+    setLojaAtual({ ...lojaAtual, isOpen: novoStatus });
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/lojas/${id}/`, {
+        method: "PATCH", // PATCH atualiza apenas o campo que enviarmos
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${usuarioLogado.access}`
+        },
+        body: JSON.stringify({ esta_aberta: novoStatus })
+      });
+
+      if (!res.ok) {
+        // Se der erro no banco, desfazemos a mudança visual
+        setLojaAtual({ ...lojaAtual, isOpen: !novoStatus });
+        alert("Erro ao alterar o status da loja.");
+      }
+    } catch (error) {
+      console.error(error);
+      setLojaAtual({ ...lojaAtual, isOpen: !novoStatus });
+      alert("Erro de conexão com o servidor.");
     }
   };
 
@@ -143,6 +198,8 @@ export const Loja = () => {
         setAbaAtiva={setAbaAtiva}
         onContatoClick={() => setIsModalAberto(true)} 
         onVoltar={() => navigate(-1)}
+        isOwner={isOwner}
+        onToggleStatus={handleToggleStatus}
       />
 
       <main className="container mx-auto">
@@ -155,13 +212,12 @@ export const Loja = () => {
         )}
         
         {abaAtiva === "avaliacoes" && <LojaAvaliacoes idLoja={lojaAtual.id} />}
-        {abaAtiva === "posts" && <LojaPosts idLoja={lojaAtual.id} />}
-        {abaAtiva === "comunidade" && <LojaComunidade idLoja={lojaAtual.id} />}
+        {abaAtiva === "posts" && <LojaPosts idLoja={lojaAtual.id} isOwner={isOwner} loja={lojaAtual} />}
+        {abaAtiva === "comunidade" && <LojaComunidade idLoja={lojaAtual.id} isOwner={isOwner} />}
       </main>
 
       <ModalContato isOpen={isModalAberto} onClose={() => setIsModalAberto(false)} loja={lojaAtual} />
 
-      {/* MODAL DE ADICIONAR PRODUTO */}
       {isModalProdutoAberto && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-md shadow-2xl relative">
@@ -173,9 +229,34 @@ export const Loja = () => {
 
             <form onSubmit={handleAdicionarProduto} className="flex flex-col gap-4">
               <div className="flex gap-4">
-                <div className="flex flex-col gap-1.5 w-1/4">
+                <div className="flex flex-col gap-1.5 w-1/4 relative">
                   <label className="text-xs font-bold uppercase text-marrom-rustico/70">Ícone</label>
-                  <input required value={novoProduto.image} onChange={(e) => setNovoProduto({...novoProduto, image: e.target.value})} className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-3 py-2 text-center text-xl outline-none focus:border-[#D85A30]" />
+                  
+                  {/* Botão que mostra o emoji atual e abre o seletor ao clicar */}
+                  <button 
+                    type="button" 
+                    onClick={() => setMostrarEmojis(!mostrarEmojis)}
+                    className="w-full h-10.5 bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl text-2xl flex items-center justify-center hover:bg-white hover:border-[#D85A30] transition-colors cursor-pointer"
+                  >
+                    {novoProduto.emoji}
+                  </button>
+
+                  {/* A Janela flutuante de Emojis */}
+                  {mostrarEmojis && (
+                    <div className="absolute top-16 left-0 z-50 shadow-2xl rounded-lg">
+                      <EmojiPicker 
+                        onEmojiClick={(emojiObject) => {
+                          setNovoProduto({...novoProduto, emoji: emojiObject.emoji});
+                          setMostrarEmojis(false); // Fecha a janela após escolher
+                        }} 
+                        autoFocusSearch={false}
+                        searchDisabled={false}
+                        skinTonesDisabled={true}
+                        width={300}
+                        height={400}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5 flex-1">
                   <label className="text-xs font-bold uppercase text-marrom-rustico/70">Nome do Produto</label>

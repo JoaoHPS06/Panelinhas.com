@@ -6,7 +6,7 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = '__all__'
         # O backend descobre a loja automaticamente baseado em quem está logado
-        read_only_fields = ['loja', 'criado_em']
+        read_only_fields = ['criado_em']
 
 
 class AvaliacaoSerializer(serializers.ModelSerializer):
