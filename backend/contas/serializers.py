@@ -27,14 +27,11 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"confirmarSenha": "As senhas não coincidem."}
             )
-
         return data
 
     def create(self, validated_data):
         nome = validated_data.pop("nome")
         senha = validated_data.pop("senha")
-
-        # remove o campo usado apenas para validação
         validated_data.pop("confirmarSenha")
 
         usuario = UsuarioCustomizado(

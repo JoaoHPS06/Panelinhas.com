@@ -15,7 +15,6 @@ class LojaViewSet(viewsets.ModelViewSet):
             raise ValidationError({"detail": "Você já possui uma loja cadastrada."})
         serializer.save(dono=self.request.user)
 
-    # 👈 NOVA FUNÇÃO AQUI: Cria a rota POST /api/lojas/<id>/seguir/
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def seguir(self, request, pk=None):
         loja = self.get_object() # Pega a loja pelo ID da URL
@@ -30,6 +29,24 @@ class LojaViewSet(viewsets.ModelViewSet):
         else:
             loja.seguidores.add(usuario)
             return Response({"status": "seguindo", "seguidores_totais": loja.seguidores.count()})
+    
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def minhas_lojas(self, request):
+        """
+        Retorna apenas as lojas onde o usuário logado é o DONO.
+        """
+        lojas = self.queryset.filter(dono=request.user)
+        serializer = self.get_serializer(lojas, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def seguidas(self, request):
+        """
+        Retorna apenas as lojas que o usuário logado SEGUE.
+        """
+        lojas = self.queryset.filter(seguidores=request.user)
+        serializer = self.get_serializer(lojas, many=True)
+        return Response(serializer.data)
 
 class ProdutoViewSet(viewsets.ModelViewSet):
     queryset = Produto.objects.all()
