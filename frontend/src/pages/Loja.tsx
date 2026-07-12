@@ -211,7 +211,7 @@ export const Loja = () => {
           />
         )}
         
-        {abaAtiva === "avaliacoes" && <LojaAvaliacoes idLoja={lojaAtual.id} />}
+        {abaAtiva === "avaliacoes" && <LojaAvaliacoes idLoja={lojaAtual.id} isOwner={isOwner} />}
         {abaAtiva === "posts" && <LojaPosts idLoja={lojaAtual.id} isOwner={isOwner} loja={lojaAtual} />}
         {abaAtiva === "comunidade" && <LojaComunidade idLoja={lojaAtual.id} isOwner={isOwner} />}
       </main>
