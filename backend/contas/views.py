@@ -1,4 +1,3 @@
-# contas/views.py
 from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,6 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer
+from rest_framework_simplejwt.tokens import RefreshToken 
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -41,10 +41,15 @@ class LoginView(APIView):
         usuario = authenticate(request, username=email, password=senha)
         
         if usuario is not None:
+            # GERA OS TOKENS DE SEGURANÇA (JWT) PARA ESSE USUÁRIO
+            refresh = RefreshToken.for_user(usuario)
+            
             return Response({
                 "id": usuario.id,
                 "email": usuario.email,
-                "nome": usuario.first_name,
+                "nome": getattr(usuario, 'first_name', ''),
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
                 "detail": "Login realizado com sucesso!"
             }, status=status.HTTP_200_OK)
         else:

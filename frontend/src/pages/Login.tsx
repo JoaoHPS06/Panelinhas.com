@@ -16,29 +16,29 @@ export const Login = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:8000/login/", {
+      // Ajuste a rota para a do seu backend (pode ser /api/token/ dependendo da config)
+      const res = await fetch("http://localhost:8000/api/token/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, senha }),
+        // Se o Django reclamar, mude 'email' para 'username' ou 'senha' para 'password'
+        body: JSON.stringify({ email: email, password: senha }), 
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setErro(data.detail || "Erro ao fazer login.");
+        setErro(data.detail || "Email ou senha incorretos.");
+        setLoading(false);
         return;
       }
 
+      // Salva o objeto COMPLETO (com tokens e dados do usuário) no localStorage
       localStorage.setItem("Panelinha_user", JSON.stringify(data));
-
       navigate("/");
 
     } catch (error) {
       console.error("Erro no login:", error);
       setErro("Não foi possível conectar ao servidor.");
-    } finally {
-      localStorage.setItem("Panelinha_user", JSON.stringify(email));
-      navigate("/");
       setLoading(false);
     }
   }

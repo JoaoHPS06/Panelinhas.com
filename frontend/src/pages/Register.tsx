@@ -50,6 +50,7 @@ export const Register = () => {
     <div className="min-h-screen flex">
       <div className="w-full flex">
 
+        {/* Lado Esquerdo - Banner */}
         <div className="hidden md:flex w-5/12 bg-[#D85A30] flex-col items-center justify-center gap-6 p-10">
           <img src={logo} alt="Logo Panelinhas" className="h-40 w-auto" />
           <div className="text-center">
@@ -74,12 +75,13 @@ export const Register = () => {
           </ul>
         </div>
 
+        {/* Lado Direito - Formulário */}
         <div className="flex-1 bg-white flex flex-col justify-center p-10">
           <div className="w-full max-w-sm mx-auto flex flex-col gap-4">
 
             <div>
               <h1 className="text-2xl font-semibold text-gray-900">Criar conta</h1>
-              <p className="text-sm text-gray-400 mt-1">Preencha os dados para se cadastrar</p>
+              <p className="text-sm text-gray-400 mt-1">Preencha os dados para se cadastrar e interagir com as lojas</p>
             </div>
 
             {erro && (
@@ -147,7 +149,7 @@ export const Register = () => {
             <button
               onClick={handleRegister}
               disabled={loading}
-              className="w-full mt-2 bg-[#D85A30] text-white py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full mt-2 bg-[#D85A30] text-white py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {loading ? "Criando conta..." : "Criar conta"}
             </button>
@@ -162,7 +164,7 @@ export const Register = () => {
             <div className="border-t border-gray-100 pt-4">
               <button
                 onClick={() => navigate("/")}
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors mx-auto"
+                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-600 transition-colors mx-auto cursor-pointer"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-3.5 h-3.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
