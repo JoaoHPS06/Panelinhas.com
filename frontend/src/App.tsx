@@ -6,6 +6,7 @@ import { Register } from "./pages/Register";
 import { Home } from "./components/Home";
 import { CadastroLoja } from "./pages/CadastroLoja";
 import { MinhasLojas } from "./pages/MinhasLojas";
+import { Perfil } from "./pages/Perfil";
 
 // 1. Layout Base
 const LayoutComNavbar = () => {
@@ -67,6 +68,7 @@ function App() {
             <Route path="/feed" element={<div>Aqui vai a página do Feed</div>} />
             <Route path="/minhas-lojas" element={<MinhasLojas />} />
             <Route path="/cadastro-loja" element={<CadastroLoja />} />
+            <Route path="/perfil" element={<Perfil />} />
           </Route>
 
         </Routes>

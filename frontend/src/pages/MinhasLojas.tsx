@@ -3,35 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { BotaoPrincipal } from "../components/BotaoPrincipal";
 import { NewPredioLoja, type LojaData } from "../components/PredioLoja";
 
-const LOJAS_MOCK: LojaData[] = [
-  {
-    id: 1,
-    name: "Pizzaria do Zé",
-    category: "🍽️ Alimentação",
-    emoji: "🍕",
-    rating: 4.8,
-    followers: 127,
-    isOpen: true,
-    windows: [true, false, true],
-    primary: "#E2703A",
-    secondary: "#FFD9A8",
-    description: "A melhor pizza de fermentação natural da rua virtual!",
-  },
-  {
-    id: 6,
-    name: "Padaria Estrela",
-    category: "🍽️ Alimentação",
-    emoji: "🥐",
-    rating: 4.8,
-    followers: 178,
-    isOpen: true,
-    windows: [true, false, true],
-    primary: "#C99020",
-    secondary: "#FFF2C4",
-    description: "Pães quentinhos e doces artesanais saindo a toda hora.",
-  },
-];
-
 /** Esqueleto no formato de um prédio, exibido enquanto a lista carrega */
 const BuildingSkeleton = () => (
   <div className="w-40.5 flex flex-col items-center gap-2 animate-pulse">
@@ -41,7 +12,7 @@ const BuildingSkeleton = () => (
   </div>
 );
 
-/** Faixa fina de calçada — repete a textura usada na Faixada, pra ligar essa tela ao cenário de rua */
+/** Faixa fina de calçada */
 const FaixaDeCalcada = () => (
   <div
     className="-mx-8 -mb-8 mt-8 h-3 rounded-b-3xl relative overflow-hidden"
@@ -59,31 +30,74 @@ const FaixaDeCalcada = () => (
 
 export const MinhasLojas = () => {
   const navigate = useNavigate();
-  const [lojasDoUsuario, setLojasDoUsuario] = useState<LojaData[]>([]);
+  const [lojasProprias, setLojasProprias] = useState<LojaData[]>([]);
+  const [lojasSeguidas, setLojasSeguidas] = useState<LojaData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [abaAtiva, setAbaAtiva] = useState<"proprias" | "seguidas">("proprias");
 
   useEffect(() => {
-    const temporizador = setTimeout(() => {
-      setLojasDoUsuario(LOJAS_MOCK);
-      setLoading(false);
-    }, 800);
-
-    return () => clearTimeout(temporizador);
+    buscarLojas();
   }, []);
 
-  const totalSeguidores = lojasDoUsuario.reduce(
-    (acc, loja) => acc + loja.followers,
-    0,
-  );
-  const mediaAvaliacao = lojasDoUsuario.length
-    ? (
-        lojasDoUsuario.reduce((acc, loja) => acc + loja.rating, 0) /
-        lojasDoUsuario.length
-      ).toFixed(1)
+  const buscarLojas = async () => {
+    setLoading(true);
+    try {
+      const userString = localStorage.getItem("Panelinha_user");
+      const token = userString ? JSON.parse(userString).access : null;
+
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+
+      // Dispara as duas requisições ao mesmo tempo para carregar mais rápido
+      const [resProprias, resSeguidas] = await Promise.all([
+        fetch("http://localhost:8000/api/lojas/minhas_lojas/", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("http://localhost:8000/api/lojas/seguidas/", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      if (resProprias.ok && resSeguidas.ok) {
+        const dadosProprias = await resProprias.json();
+        const dadosSeguidas = await resSeguidas.json();
+
+        // Traduz o JSON do Django para o formato do Componente React
+        const adaptarLoja = (d: any): LojaData => ({
+          id: d.id,
+          name: d.nome,
+          category: d.categoria,
+          emoji: d.emoji || "🏪",
+          rating: d.nota_media || 5.0,
+          followers: d.total_seguidores || 0,
+          isOpen: d.esta_aberta ?? true,
+          windows: d.janelas || [true, false, true],
+          primary: d.cor_primaria || "#D85A30",
+          secondary: d.cor_secundaria || "#FAF7F4",
+        });
+
+        setLojasProprias(dadosProprias.map(adaptarLoja));
+        setLojasSeguidas(dadosSeguidas.map(adaptarLoja));
+      }
+    } catch (error) {
+      console.error("Erro ao buscar as lojas:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const listaExibida = abaAtiva === "proprias" ? lojasProprias : lojasSeguidas;
+  
+  const totalSeguidores = listaExibida.reduce((acc, loja) => acc + loja.followers, 0);
+  const mediaAvaliacao = listaExibida.length
+    ? (listaExibida.reduce((acc, loja) => acc + loja.rating, 0) / listaExibida.length).toFixed(1)
     : "0.0";
 
   return (
     <div className="max-w-5xl mx-auto pt-20 px-6 pb-12 font-nunito min-h-screen space-y-8">
+      {/* Cabeçalho */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-marrom-rustico/10 pb-6">
         <div>
           <button
@@ -99,8 +113,7 @@ export const MinhasLojas = () => {
             Minhas Lojas
           </h1>
           <p className="text-[#6B5040] text-sm mt-1">
-            Gerencie seus negócios e veja como eles aparecem na nossa rua
-            virtual.
+            Gerencie seus negócios ou acompanhe seus estabelecimentos favoritos.
           </p>
         </div>
 
@@ -112,126 +125,104 @@ export const MinhasLojas = () => {
         </div>
       </div>
 
+      {/* Sistema de Abas */}
+      <div className="flex gap-4 border-b border-marrom-rustico/10">
+        <button
+          onClick={() => setAbaAtiva("proprias")}
+          className={`pb-3 text-sm font-bold uppercase tracking-wide transition-colors duration-300 relative cursor-pointer ${
+            abaAtiva === "proprias" ? "text-marrom-rustico" : "text-marrom-rustico/40 hover:text-marrom-rustico/70"
+          }`}
+        >
+          🏪 Meus Negócios ({lojasProprias.length})
+          {abaAtiva === "proprias" && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-marrom-rustico rounded-t-md"></div>
+          )}
+        </button>
+        <button
+          onClick={() => setAbaAtiva("seguidas")}
+          className={`pb-3 text-sm font-bold uppercase tracking-wide transition-colors duration-300 relative cursor-pointer ${
+            abaAtiva === "seguidas" ? "text-marrom-rustico" : "text-marrom-rustico/40 hover:text-marrom-rustico/70"
+          }`}
+        >
+          ⭐ Lojas que Sigo ({lojasSeguidas.length})
+          {abaAtiva === "seguidas" && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-marrom-rustico rounded-t-md"></div>
+          )}
+        </button>
+      </div>
+
       {loading ? (
         <div className="space-y-8">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="bg-white border border-marrom-rustico/10 p-5 rounded-2xl shadow-sm h-19 animate-pulse"
-              />
+              <div key={i} className="bg-white border border-marrom-rustico/10 p-5 rounded-2xl shadow-sm h-19 animate-pulse" />
             ))}
           </div>
           <div className="bg-[#FAF7F4] border border-marrom-rustico/10 rounded-3xl p-8 shadow-inner">
-            <span className="text-xs font-extrabold uppercase tracking-widest text-marrom-rustico/40 block mb-6">
-              Construindo sua rua...
-            </span>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-y-12 gap-x-6 justify-items-center">
-              {[1, 2, 3, 4].map((i) => (
-                <BuildingSkeleton key={i} />
-              ))}
+             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-y-12 gap-x-6 justify-items-center">
+              {[1, 2, 3, 4].map((i) => <BuildingSkeleton key={i} />)}
             </div>
           </div>
         </div>
       ) : (
         <>
-          {lojasDoUsuario.length === 0 ? (
-            <div className="bg-white border border-marrom-rustico/10 rounded-2xl p-12 text-center shadow-sm max-w-xl mx-auto mt-10">
-              <span className="text-5xl block mb-4">🏪</span>
-              <h3 className="text-lg font-bold text-[#2A1F14] mb-1">
-                Sua calçada está vazia
-              </h3>
-              <p className="text-[#6B5040] text-sm mb-6">
-                Você ainda não construiu nenhuma fachada na nossa rua virtual.
-                Que tal inaugurar o seu primeiro prédio agora?
-              </p>
-              <BotaoPrincipal
-                texto="Construir minha primeira loja"
-                onClick={() => navigate("/cadastro-loja")}
-              />
-            </div>
-          ) : (
-            <div className="space-y-8">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div
-                  className="bg-white border border-marrom-rustico/10 border-t-[3px] p-5 rounded-2xl shadow-sm flex items-center gap-4"
-                  style={{ borderTopColor: "#D85A30" }}
-                >
-                  <span className="text-3xl bg-creme-suave p-3 rounded-xl">
-                    🏢
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold uppercase text-marrom-rustico/50 tracking-wider">
-                      Total de Lojas
-                    </p>
-                    <p className="text-2xl font-black text-cafe-expresso">
-                      {lojasDoUsuario.length}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className="bg-white border border-marrom-rustico/10 border-t-[3px] p-5 rounded-2xl shadow-sm flex items-center gap-4"
-                  style={{ borderTopColor: "#3F7FD1" }}
-                >
-                  <span className="text-3xl bg-creme-suave p-3 rounded-xl">
-                    👥
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold uppercase text-marrom-rustico/50 tracking-wider">
-                      Seguidores Totais
-                    </p>
-                    <p className="text-2xl font-black text-cafe-expresso">
-                      {totalSeguidores}
-                    </p>
-                  </div>
-                </div>
-                <div
-                  className="bg-white border border-marrom-rustico/10 border-t-[3px] p-5 rounded-2xl shadow-sm flex items-center gap-4"
-                  style={{ borderTopColor: "#C99020" }}
-                >
-                  <span className="text-3xl bg-creme-suave p-3 rounded-xl">
-                    ⭐
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold uppercase text-marrom-rustico/50 tracking-wider">
-                      Média de Avaliações
-                    </p>
-                    <p className="text-2xl font-black text-cafe-expresso">
-                      {mediaAvaliacao}{" "}
-                      <span className="text-xs font-normal text-marrom-rustico/60">
-                        / 5.0
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-[#FAF7F4] border border-marrom-rustico/10 rounded-3xl p-8 shadow-inner relative overflow-hidden">
-                <span className="text-xs font-extrabold uppercase tracking-widest text-marrom-rustico/40 block mb-6">
-                  Suas propriedades ativas na rua:
-                </span>
-
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-y-12 gap-x-6 justify-items-center">
-                  {lojasDoUsuario.map((loja) => (
-                    <div
-                      key={loja.id}
-                      className="flex flex-col items-center gap-2"
-                    >
-                      <NewPredioLoja loja={loja} />
-                      <button
-                        onClick={() => navigate(`/loja/${loja.id}`)}
-                        className="text-[11px] font-bold uppercase tracking-wide text-marrom-rustico/50 hover:text-vermelho-pimenta focus:text-vermelho-pimenta transition-colors cursor-pointer"
-                      >
-                        Gerenciar →
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                <FaixaDeCalcada />
+          {/* Métricas da Aba Ativa */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white border border-marrom-rustico/10 border-t-[3px] p-5 rounded-2xl shadow-sm flex items-center gap-4" style={{ borderTopColor: "#D85A30" }}>
+              <span className="text-3xl bg-creme-suave p-3 rounded-xl">🏢</span>
+              <div>
+                <p className="text-xs font-bold uppercase text-marrom-rustico/50 tracking-wider">Total nesta lista</p>
+                <p className="text-2xl font-black text-cafe-expresso">{listaExibida.length}</p>
               </div>
             </div>
-          )}
+            <div className="bg-white border border-marrom-rustico/10 border-t-[3px] p-5 rounded-2xl shadow-sm flex items-center gap-4" style={{ borderTopColor: "#3F7FD1" }}>
+              <span className="text-3xl bg-creme-suave p-3 rounded-xl">👥</span>
+              <div>
+                <p className="text-xs font-bold uppercase text-marrom-rustico/50 tracking-wider">Seguidores (Soma)</p>
+                <p className="text-2xl font-black text-cafe-expresso">{totalSeguidores}</p>
+              </div>
+            </div>
+            <div className="bg-white border border-marrom-rustico/10 border-t-[3px] p-5 rounded-2xl shadow-sm flex items-center gap-4" style={{ borderTopColor: "#C99020" }}>
+              <span className="text-3xl bg-creme-suave p-3 rounded-xl">⭐</span>
+              <div>
+                <p className="text-xs font-bold uppercase text-marrom-rustico/50 tracking-wider">Média de Avaliações</p>
+                <p className="text-2xl font-black text-cafe-expresso">{mediaAvaliacao} <span className="text-xs font-normal text-marrom-rustico/60">/ 5.0</span></p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-[#FAF7F4] border border-marrom-rustico/10 rounded-3xl p-8 shadow-inner relative overflow-hidden min-h-100">
+            {listaExibida.length === 0 ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-6 z-10">
+                <span className="text-5xl block mb-4">{abaAtiva === "proprias" ? "🏪" : "🚶"}</span>
+                <h3 className="text-lg font-bold text-[#2A1F14] mb-1">
+                  {abaAtiva === "proprias" ? "Você ainda não inaugurou nenhuma loja" : "Você não segue nenhuma loja"}
+                </h3>
+                <p className="text-[#6B5040] text-sm mb-6 max-w-sm">
+                  {abaAtiva === "proprias" 
+                    ? "Abra as portas do seu negócio para a comunidade da rua virtual hoje mesmo." 
+                    : "Explore a rua principal e acompanhe as novidades dos seus estabelecimentos favoritos."}
+                </p>
+                <BotaoPrincipal
+                  texto={abaAtiva === "proprias" ? "Construir minha fachada" : "Explorar a rua"}
+                  onClick={() => navigate(abaAtiva === "proprias" ? "/cadastro-loja" : "/")}
+                />
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-y-12 gap-x-6 justify-items-center relative z-10">
+                {listaExibida.map((loja) => (
+                  <div key={loja.id} className="flex flex-col items-center gap-2 group cursor-pointer transition-transform duration-300 hover:scale-105" onClick={() => navigate(`/loja/${loja.id}`)}>
+                    <NewPredioLoja loja={loja} />
+                    <button className="text-[11px] font-bold uppercase tracking-wide text-marrom-rustico/50 group-hover:text-vermelho-pimenta transition-colors mt-1">
+                      {abaAtiva === "proprias" ? "Gerenciar →" : "Visitar →"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <FaixaDeCalcada />
+          </div>
         </>
       )}
     </div>

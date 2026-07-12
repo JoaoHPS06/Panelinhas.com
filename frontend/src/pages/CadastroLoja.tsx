@@ -1,229 +1,251 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { NewPredioLoja } from "../components/PredioLoja";
+import { NewPredioLoja, type LojaData } from "../components/PredioLoja";
 
 const EMOJIS_POR_CATEGORIA: Record<string, string[]> = {
-    Alimentação: ["🍕", "🍔", "🥐", "🍩", "🍣", "🍦", "🎂", "☕", "🍺"],
-    Moda: ["👗", "👕", "👜", "👠", "👟", "🧢", "🕶️", "🧥", "🧣"],
-    Eletrônicos: ["💻", "📱", "🎮", "🎧", "📺", "⌚", "⌨️", "📷"],
-    Beleza: ["💄", "💅", "💈", "🧴", "🧼", "🎨", "✨"],
-    Artesanato: ["🏺", "🧶", "🎨", "🧵", "🪵", "🧱", "🌻"],
+  "Alimentação": ["🍕", "🍔", "🥐", "🍩", "🍣", "🍦", "🎂", "☕", "🍺"],
+  "Moda": ["👗", "👕", "👜", "👠", "👟", "🧢", "🕶️", "🧥", "🧣"],
+  "Eletrônicos": ["💻", "📱", "🎮", "🎧", "📺", "⌚", "⌨️", "📷"],
+  "Beleza": ["💄", "💅", "💈", "🧴", "🧼", "🎨", "✨"],
+  "Artesanato": ["🏺", "🧶", "🎨", "🧵", "🪵", "🧱", "🌻"],
+  "Outros": ["🏪", "🛍️", "🛒", "🔧", "📦", "🏢", "✨", "💡"]
 };
 
 export const CadastroLoja = () => {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const [nome, setNome] = useState("");
+  const [categoria, setCategoria] = useState("Alimentação");
+  const [descricao, setDescricao] = useState("");
+  const [emoji, setEmoji] = useState(EMOJIS_POR_CATEGORIA["Alimentação"][0]); 
+  const [corPrimaria, setCorPrimaria] = useState("#D85A30");
+  const [corSecundaria, setCorSecundaria] = useState("#F3E5D8");
+  const [telefone, setTelefone] = useState("");
+  const [endereco, setEndereco] = useState("");
 
-    const [nome, setNome] = useState("");
-    const [categoria, setCategoria] = useState("Alimentação");
-    const [descricao, setDescricao] = useState("");
-    const [corPrimaria, setCorPrimaria] = useState("#D85A30");
-    const [corSecundaria, setCorSecundaria] = useState("#FAF7F4");
-    const [emoji, setEmoji] = useState("🍕");
-    const [loading, setLoading] = useState(false);
-    const [erro, setErro] = useState("");
+  const [erro, setErro] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const handleCategoriaChange = (novaCategoria: string) => {
-        setCategoria(novaCategoria);
-        const novosEmojis = EMOJIS_POR_CATEGORIA[novaCategoria] || ["🏪"];
-        setEmoji(novosEmojis[0]);
-    };
+  const handleCategoriaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const novaCategoria = e.target.value;
+    setCategoria(novaCategoria);
+    
+    const emojisDaCategoria = EMOJIS_POR_CATEGORIA[novaCategoria] || EMOJIS_POR_CATEGORIA["Outros"];
+    setEmoji(emojisDaCategoria[0]);
+  };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setErro("");
-        setLoading(true);
+  const mascaraTelefone = (valor: string) => {
+    let v = valor.replace(/\D/g, "");
+    v = v.substring(0, 11);
 
-        const user = JSON.parse(localStorage.getItem("Panelinha_user") || "{}");
+    if (v.length <= 10) {
+      v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+      v = v.replace(/(\d{4})(\d)/, "$1-$2");
+    } else {
+      v = v.replace(/^(\d{2})(\d)/g, "($1) $2");
+      v = v.replace(/(\d{5})(\d)/, "$1-$2");
+    }
+    
+    return v;
+  };
 
-        const dadosDaLoja = {
-            name: nome,
-            category: `🍽️ ${categoria}`,
-            emoji: emoji,
-            description: descricao,
-            primary: corPrimaria,
-            secondary: corSecundaria,
-            userId: user.id || user.email || null,
-            rating: 5.0,
-            followers: 0,
-            isOpen: true,
-            windows: [true, false, true]
-        };
+  const handleTelefoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const valorFormatado = mascaraTelefone(e.target.value);
+    setTelefone(valorFormatado);
+  };
 
-        try {
-            // Pegando o Token do LocalStorage de forma segura
-            const userString = localStorage.getItem("Panelinha_user");
-            const userData = userString ? JSON.parse(userString) : null;
-            const token = userData?.access; // Puxa o token de acesso (JWT)
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErro("");
+    setLoading(true);
 
-            if (!token) {
-                throw new Error("Você precisa estar logado para criar uma loja.");
-            }
+    try {
+      const userString = localStorage.getItem("Panelinha_user");
+      const userData = userString ? JSON.parse(userString) : null;
+      const token = userData?.access;
 
-            const res = await fetch("http://localhost:8000/api/lojas/", {
-                method: "POST",
-                headers: { 
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` 
-                },
-                body: JSON.stringify(dadosDaLoja),
-            });
+      if (!token) {
+        throw new Error("Você precisa estar logado para inaugurar uma loja.");
+      }
 
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.detail || "Erro ao cadastrar a loja.");
-            }
+      const dadosDaLoja = {
+        nome,
+        categoria,
+        descricao,
+        emoji,
+        cor_primaria: corPrimaria,
+        cor_secundaria: corSecundaria,
+        telefone, 
+        endereco, 
+        esta_aberta: true,
+        janelas: [true, false, true, false]
+      };
 
-            navigate("/minhas-lojas");
-        } catch (err: any) {
-            console.error("Erro no cadastro:", err);
-            setErro(err.message || "Não foi possível conectar ao servidor.");
-        } finally {
-            setLoading(false);
-        }
-    };
+      const res = await fetch("http://localhost:8000/api/lojas/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(dadosDaLoja),
+      });
 
-    return (
-        <div className="max-w-4xl mx-auto pt-20 px-6 pb-12 font-nunito">
-            <button
-                onClick={() => navigate("/minhas-lojas")}
-                className="flex items-center gap-2 text-sm font-bold text-marrom-rustico/60 hover:text-vermelho-pimenta transition-colors mb-6 cursor-pointer"
-            >
-                ← Voltar para Minhas Lojas
-            </button>
+      const textResponse = await res.text(); 
+      let data;
+      try {
+        data = JSON.parse(textResponse);
+      } catch (err) {
+        throw new Error("Erro interno do servidor (500). Verifique o terminal do Django!");
+      }
 
-            <h1 className="text-3xl font-extrabold text-[#2A1F14] mb-2" style={{ fontFamily: "Fraunces, Georgia, serif" }}>
-                Construa sua Fachada
-            </h1>
-            <p className="text-[#6B5040] mb-8">Escolha as características e pinte o prédio que representará sua loja na rua.</p>
+      if (!res.ok) {
+        const mensagem = data.detail || (typeof data === 'object' ? Object.values(data)[0] : "Erro ao cadastrar a loja.");
+        throw new Error(String(mensagem));
+      }
 
-            {erro && <p className="text-red-500 text-sm font-semibold mb-4 bg-red-50 p-3 rounded-xl border border-red-200">{erro}</p>}
+      navigate("/minhas-lojas");
+    } catch (err: any) {
+      console.error("Erro no cadastro:", err);
+      setErro(err.message || "Não foi possível conectar ao servidor.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-8 items-start">
+  const lojaPreview: LojaData = {
+    id: 0,
+    name: nome || "Nome da sua loja",
+    category: categoria,
+    emoji: emoji,
+    rating: 5.0,
+    followers: 0,
+    isOpen: true,
+    windows: [true, false, true, false],
+    primary: corPrimaria,
+    secondary: corSecundaria,
+  };
 
-                {/* FORMULÁRIO */}
-                <form onSubmit={handleSubmit} className="md:col-span-3 flex flex-col gap-4 bg-white p-6 rounded-2xl shadow-md border border-marrom-rustico/10">
-                    <div className="flex flex-col gap-1">
-                        <label htmlFor="nome" className="text-xs font-bold uppercase text-marrom-rustico/70">Nome da Loja:</label>
-                        <input
-                            type="text"
-                            id="nome"
-                            required
-                            value={nome}
-                            onChange={(e) => setNome(e.target.value)}
-                            className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-2 text-sm text-cafe-expresso outline-none focus:border-[#D85A30]"
-                            placeholder="Ex: Pastelaria do Zé"
-                        />
-                    </div>
+  const listaEmojisAtual = EMOJIS_POR_CATEGORIA[categoria] || EMOJIS_POR_CATEGORIA["Outros"];
 
-                    <div className="flex flex-col gap-1">
-                        <label htmlFor="categoria" className="text-xs font-bold uppercase text-marrom-rustico/70">Categoria:</label>
-                        <select
-                            id="categoria"
-                            value={categoria}
-                            onChange={(e) => handleCategoriaChange(e.target.value)} // Atualizado para rodar a troca inteligente de emoji
-                            className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-2 text-sm text-cafe-expresso outline-none focus:border-[#D85A30]"
-                        >
-                            <option value="Alimentação">Alimentação</option>
-                            <option value="Moda">Moda</option>
-                            <option value="Eletrônicos">Eletrônicos</option>
-                            <option value="Beleza">Beleza</option>
-                            <option value="Artesanato">Artesanato</option>
-                        </select>
-                    </div>
+  return (
+    <div className="max-w-6xl mx-auto pt-24 px-6 pb-12 font-nunito">
+      <div className="mb-10">
+        <h1 className="text-4xl font-extrabold text-[#2A1F14] mb-2" style={{ fontFamily: "Fraunces, Georgia, serif" }}>
+          Construa sua Fachada
+        </h1>
+        <p className="text-[#6B5040] text-lg">
+          Escolha as características, preencha os dados e pinte o prédio que representará sua loja na rua.
+        </p>
+      </div>
 
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold uppercase text-marrom-rustico/70">Escolha o Ícone da sua Vitrine:</label>
-                        <div className="flex gap-2 flex-wrap bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl p-3">
-                            {(EMOJIS_POR_CATEGORIA[categoria] || ["🏪"]).map((opçãoEmoji) => (
-                                <button
-                                    key={opçãoEmoji}
-                                    type="button"
-                                    onClick={() => setEmoji(opçãoEmoji)}
-                                    className={`text-2xl p-2 rounded-xl transition-all hover:scale-110 cursor-pointer ${emoji === opçãoEmoji ? "bg-[#D85A30]/10 border-2 border-[#D85A30]" : "bg-white border border-black/5 hover:bg-gray-50"
-                                        }`}
-                                >
-                                    {opçãoEmoji}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1">
-                        <label htmlFor="descricao" className="text-xs font-bold uppercase text-marrom-rustico/70">Descrição da Loja:</label>
-                        <textarea
-                            id="descricao"
-                            required
-                            rows={3}
-                            value={descricao}
-                            onChange={(e) => setDescricao(e.target.value)}
-                            className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-2 text-sm text-cafe-expresso outline-none focus:border-[#D85A30] resize-none"
-                            placeholder="Conte um pouco sobre sua loja, produtos ou serviços."
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1">
-                            <label htmlFor="corPrimaria" className="text-xs font-bold uppercase text-marrom-rustico/70">Cor do Toldo:</label>
-                            <div className="flex items-center gap-2 bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-3 py-1">
-                                <input
-                                    type="color"
-                                    id="corPrimaria"
-                                    value={corPrimaria}
-                                    onChange={(e) => setCorPrimaria(e.target.value)}
-                                    className="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent"
-                                />
-                                <span className="text-xs font-mono text-cafe-expresso uppercase">{corPrimaria}</span>
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col gap-1">
-                            <label htmlFor="corSecundaria" className="text-xs font-bold uppercase text-marrom-rustico/70">Cor da Parede:</label>
-                            <div className="flex items-center gap-2 bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-3 py-1">
-                                <input
-                                    type="color"
-                                    id="corSecundaria"
-                                    value={corSecundaria}
-                                    onChange={(e) => setCorSecundaria(e.target.value)}
-                                    className="w-8 h-8 rounded cursor-pointer border-0 p-0 bg-transparent"
-                                />
-                                <span className="text-xs font-mono text-cafe-expresso uppercase">{corSecundaria}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full mt-2 bg-[#D85A30] text-white font-bold py-3 rounded-xl hover:bg-[#BF4A22] transition-colors shadow-md disabled:bg-gray-400 cursor-pointer text-sm"
-                    >
-                        {loading ? "Inaugurando Loja..." : "Inaugurar Minha Loja! 🚀"}
-                    </button>
-                </form>
-
-                <div className="md:col-span-2 bg-linear-to-b from-[#7FC8E8] to-[#D8EEF8] border border-marrom-rustico/10 rounded-2xl p-8 flex flex-col items-center justify-center min-h-85 shadow-inner relative overflow-hidden">
-                    <span className="absolute top-3 left-4 text-[10px] font-extrabold uppercase tracking-widest text-sky-950/50">
-                        Visualização na Rua
-                    </span>
-
-                    <div className="scale-125 transform origin-center transition-all duration-300">
-                        <NewPredioLoja
-                            loja={{
-                                id: 0,
-                                name: nome,
-                                category: categoria,
-                                emoji: emoji,
-                                rating: 5.0,
-                                followers: 0,
-                                isOpen: true,
-                                windows: [true, false, true],
-                                primary: corPrimaria,
-                                secondary: corSecundaria
-                            }}
-                        />
-                    </div>
-                </div>
-
-            </div>
+      {erro && (
+        <div className="bg-red-50 text-red-600 border border-red-200 p-4 rounded-xl mb-8 font-semibold">
+          {erro}
         </div>
-    );
+      )}
+
+      <div className="flex flex-col md:flex-row gap-12">
+        <form onSubmit={handleSubmit} className="flex-1 bg-white border border-[#E2D8D0] p-8 rounded-3xl shadow-sm space-y-6">
+          
+          <div>
+            <label className="text-xs font-bold uppercase text-[#8C7361] tracking-wider mb-2 block">
+              Nome da Loja
+            </label>
+            <input required type="text" value={nome} onChange={(e) => setNome(e.target.value)} className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-3 focus:outline-none focus:border-[#D85A30]" placeholder="Ex: Padaria do João" />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="text-xs font-bold uppercase text-[#8C7361] tracking-wider mb-2 block">
+                Telefone de Contato
+              </label>
+              <input 
+                type="text" 
+                value={telefone} 
+                onChange={handleTelefoneChange} 
+                maxLength={15}
+                className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-3 focus:outline-none focus:border-[#D85A30]" 
+                placeholder="(00) 90000-0000" 
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase text-[#8C7361] tracking-wider mb-2 block">
+                Endereço Físico
+              </label>
+              <input type="text" value={endereco} onChange={(e) => setEndereco(e.target.value)} className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-3 focus:outline-none focus:border-[#D85A30]" placeholder="Rua das Flores, 123" />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold uppercase text-[#8C7361] tracking-wider mb-2 block">
+              Categoria
+            </label>
+            <select value={categoria} onChange={handleCategoriaChange} className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-3 focus:outline-none focus:border-[#D85A30]">
+              {Object.keys(EMOJIS_POR_CATEGORIA).map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* O CAMPO DE DESCRIÇÃO QUE FALTAVA */}
+          <div>
+            <label className="text-xs font-bold uppercase text-[#8C7361] tracking-wider mb-2 block">
+              Descrição da Loja
+            </label>
+            <textarea 
+              required 
+              rows={3}
+              value={descricao} 
+              onChange={(e) => setDescricao(e.target.value)} 
+              className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-3 focus:outline-none focus:border-[#D85A30] resize-none" 
+              placeholder="Conte um pouco sobre o que sua loja oferece, seus diferenciais e especialidades..." 
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-bold uppercase text-[#8C7361] tracking-wider mb-2 block">
+              Ícone da Vitrine
+            </label>
+            <div className="flex flex-wrap gap-2 p-3 bg-[#FAF7F4] border border-[#E2D8D0] rounded-2xl min-h-19">
+              {listaEmojisAtual.map((emj) => (
+                <button key={emj} type="button" onClick={() => setEmoji(emj)} className={`w-12 h-12 text-2xl rounded-xl transition-all flex items-center justify-center cursor-pointer ${emoji === emj ? "bg-white shadow-md border-2 border-[#D85A30]" : "hover:bg-white hover:scale-110"}`}>
+                  {emj}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold uppercase text-[#8C7361] tracking-wider mb-2 block">
+                Cor Principal
+              </label>
+              <input type="color" value={corPrimaria} onChange={(e) => setCorPrimaria(e.target.value)} className="w-full h-12 rounded-xl cursor-pointer" />
+            </div>
+            <div>
+              <label className="text-xs font-bold uppercase text-[#8C7361] tracking-wider mb-2 block">
+                Cor Secundária
+              </label>
+              <input type="color" value={corSecundaria} onChange={(e) => setCorSecundaria(e.target.value)} className="w-full h-12 rounded-xl cursor-pointer" />
+            </div>
+          </div>
+
+          <button type="submit" disabled={loading} className="w-full bg-[#D85A30] text-white font-black uppercase tracking-wider py-4 rounded-xl hover:bg-[#C24B24] transition-colors mt-6 cursor-pointer">
+            {loading ? "Construindo..." : "Inaugurar Estabelecimento"}
+          </button>
+        </form>
+
+        <div className="md:w-100 flex flex-col items-center">
+          <div className="sticky top-24 w-full bg-linear-to-b from-sky-200 to-sky-100 rounded-3xl p-8 flex flex-col items-center justify-end h-122.5 shadow-inner border border-sky-300/30">
+            <span className="text-[10px] font-black uppercase text-sky-800/40 tracking-widest absolute top-6">
+              Visualização na Rua
+            </span>
+            <div className="scale-125 transform origin-bottom mt-auto">
+              <NewPredioLoja loja={lojaPreview} />
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
 };
