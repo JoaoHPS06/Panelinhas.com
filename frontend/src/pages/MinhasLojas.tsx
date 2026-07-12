@@ -35,15 +35,24 @@ export const MinhasLojas = () => {
   const [loading, setLoading] = useState(true);
   const [abaAtiva, setAbaAtiva] = useState<"proprias" | "seguidas">("proprias");
 
+  const [modalRemoverAberto, setModalRemoverAberto] = useState(false);
+  const [nomeLojaRemover, setNomeLojaRemover] = useState("");
+  const [erroRemover, setErroRemover] = useState("");
+  const [removendo, setRemovendo] = useState(false);
+
   useEffect(() => {
     buscarLojas();
   }, []);
 
+  const getToken = () => {
+    const userString = localStorage.getItem("Panelinha_user");
+    return userString ? JSON.parse(userString).access : null;
+  };
+
   const buscarLojas = async () => {
     setLoading(true);
     try {
-      const userString = localStorage.getItem("Panelinha_user");
-      const token = userString ? JSON.parse(userString).access : null;
+      const token = getToken();
 
       if (!token) {
         navigate("/login");
@@ -88,8 +97,54 @@ export const MinhasLojas = () => {
     }
   };
 
+  const fecharModalRemover = () => {
+    setModalRemoverAberto(false);
+    setNomeLojaRemover("");
+    setErroRemover("");
+  };
+
+  const removerLoja = async () => {
+    setErroRemover("");
+
+    const loja = lojasProprias.find(
+      (l) => l.name.trim().toLowerCase() === nomeLojaRemover.trim().toLowerCase()
+    );
+
+    if (!loja) {
+      setErroRemover("Nenhuma loja sua com esse nome foi encontrada. Digite o nome exatamente como aparece.");
+      return;
+    }
+
+    const confirmado = window.confirm(
+      `Tem certeza que deseja excluir permanentemente a loja "${loja.name}"? Essa ação não pode ser desfeita.`
+    );
+
+    if (!confirmado) return;
+
+    try {
+      setRemovendo(true);
+      const token = getToken();
+
+      const res = await fetch(`http://localhost:8000/api/lojas/${loja.id}/`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        throw new Error();
+      }
+
+      setLojasProprias((prev) => prev.filter((l) => l.id !== loja.id));
+      fecharModalRemover();
+    } catch {
+      setErroRemover("Erro ao remover a loja. Tente novamente.");
+    } finally {
+      setRemovendo(false);
+    }
+  };
+
   const listaExibida = abaAtiva === "proprias" ? lojasProprias : lojasSeguidas;
-  
+
   const totalSeguidores = listaExibida.reduce((acc, loja) => acc + loja.followers, 0);
   const mediaAvaliacao = listaExibida.length
     ? (listaExibida.reduce((acc, loja) => acc + loja.rating, 0) / listaExibida.length).toFixed(1)
@@ -117,11 +172,24 @@ export const MinhasLojas = () => {
           </p>
         </div>
 
-        <div className="shrink-0">
+        <div className="shrink-0 flex flex-col sm:flex-row gap-2">
           <BotaoPrincipal
             texto="+ Inaugurar Nova Loja"
             onClick={() => navigate("/cadastro-loja")}
           />
+          {abaAtiva === "proprias" && lojasProprias.length > 0 && (
+            <button
+              onClick={() => {
+                setNomeLojaRemover("");
+                setErroRemover("");
+                setModalRemoverAberto(true);
+              }}
+              className="justify-center items-center text-center text-red-500 text-sm font-semibold bg-red-50 p-2 rounded-xl border border-red-200 cursor-pointer hover:bg-red-100 transition-colors"
+              type="button"
+            >
+              Remover Loja
+            </button>
+          )}
         </div>
       </div>
 
@@ -224,6 +292,65 @@ export const MinhasLojas = () => {
             <FaixaDeCalcada />
           </div>
         </>
+      )}
+
+      {/* MODAL DE REMOÇÃO */}
+      {modalRemoverAberto && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={fecharModalRemover}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-extrabold text-[#2A1F14] mb-2">
+              Remover Loja
+            </h2>
+            <p className="text-sm text-[#6B5040] mb-4">
+              Essa ação é <strong>permanente</strong>. Pra confirmar, digite o
+              nome exato da loja que deseja excluir.
+            </p>
+
+            <label htmlFor="nomeLojaRemover" className="text-xs font-bold uppercase text-marrom-rustico/70">
+              Nome da loja:
+            </label>
+            <input
+              id="nomeLojaRemover"
+              type="text"
+              autoFocus
+              value={nomeLojaRemover}
+              onChange={(e) => setNomeLojaRemover(e.target.value)}
+              placeholder="Ex: Pizzaria do Zé"
+              className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-2 text-sm text-cafe-expresso outline-none focus:border-red-400 mt-1"
+            />
+
+            {erroRemover && (
+              <p className="text-red-500 text-xs font-semibold mt-2">
+                {erroRemover}
+              </p>
+            )}
+
+            <div className="flex gap-3 mt-6">
+              <button
+                type="button"
+                onClick={fecharModalRemover}
+                disabled={removendo}
+                className="flex-1 py-2 rounded-xl border border-marrom-rustico/20 text-sm font-bold text-marrom-rustico/70 hover:bg-marrom-rustico/5 transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={removerLoja}
+                disabled={!nomeLojaRemover.trim() || removendo}
+                className="flex-1 py-2 rounded-xl bg-red-500 text-white text-sm font-bold hover:bg-red-600 transition-colors cursor-pointer disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                {removendo ? "Removendo..." : "Confirmar Exclusão"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
