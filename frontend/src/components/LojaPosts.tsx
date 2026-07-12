@@ -94,7 +94,7 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
                 value={novoTexto}
                 onChange={(e) => setNovoTexto(e.target.value)}
                 placeholder="O que há de novo na sua loja? Divulgue ofertas, novidades ou avisos..."
-                className="w-full bg-transparent resize-none outline-none text-[#2A1F14] placeholder:text-[#8C7361] min-h-[60px] pt-3"
+                className="w-full bg-transparent resize-none outline-none text-[#2A1F14] placeholder:text-[#8C7361] min-h-15 pt-3"
               />
               {novoTexto && (
                 <div className="flex justify-end mt-3 pt-3 border-t border-[#F3E5D8] animate-fade-in">
