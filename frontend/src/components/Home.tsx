@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Carrossel } from "./Carrossel";
 //import { CardLoja } from "./CardLoja";
-import { NewPredioLoja, type Loja } from "./PredioLoja";
-import artePadaria from '../assets/padaria.png';
+import { NewPredioLoja, type LojaData } from "./PredioLoja";
 import { Faixada } from "./Faixada";
 
 //import arteRestaurante from '../assets/restaurante.png';
@@ -17,7 +16,7 @@ const categorias = [
   "🌱 Aberto agora",
 ];
 
-const lojas: Loja[] = [
+const lojas: LojaData[] = [
   {
     id: 1,
     name: "Pizzaria do Zé",

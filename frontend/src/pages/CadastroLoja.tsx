@@ -50,9 +50,21 @@ export const CadastroLoja = () => {
         };
 
         try {
+            // Pegando o Token do LocalStorage de forma segura
+            const userString = localStorage.getItem("Panelinha_user");
+            const userData = userString ? JSON.parse(userString) : null;
+            const token = userData?.access; // Puxa o token de acesso (JWT)
+
+            if (!token) {
+                throw new Error("Você precisa estar logado para criar uma loja.");
+            }
+
             const res = await fetch("http://localhost:8000/api/lojas/", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}` 
+                },
                 body: JSON.stringify(dadosDaLoja),
             });
 

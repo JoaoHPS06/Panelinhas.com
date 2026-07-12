@@ -8,6 +8,11 @@ class Loja(models.Model):
         on_delete=models.CASCADE, # se o usuário for deletado, a loja também será.
         related_name='minha_loja'
     )
+    seguidores = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, 
+        related_name='lojas_seguidas', 
+        blank=True
+    )
     nome = models.CharField(max_length=100)
     categoria = models.CharField(max_length=50)
     descricao = models.TextField()

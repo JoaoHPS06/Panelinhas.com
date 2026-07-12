@@ -11,6 +11,7 @@ export interface LojaData {
     primary: string;
     secondary: string;
     description?: string;
+    usuario_segue?: boolean;
 }
 
 interface PredioLojaProps {

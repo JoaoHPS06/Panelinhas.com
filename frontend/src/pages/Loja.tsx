@@ -13,6 +13,7 @@ type LojaCompleta = LojaData & {
   telefone: string;  
   endereco: string;  
   produtos: Produto[];
+  usuario_segue?: boolean;
 };
 
 export const Loja = () => {
@@ -54,10 +55,12 @@ export const Loja = () => {
             ehNovo: false,
           })),
 
+          followers: dadosBackend.total_seguidores || 0,
+          usuario_segue: dadosBackend.usuario_segue || false,
+
           // Fallbacks estéticos locais (enquanto não adiciona no Model do Django)
           emoji: "🏪",
           rating: 4.8,
-          followers: 120,
           isOpen: true,
           windows: [true, true, true, false],              
           primary: "marrom-rustico", 
