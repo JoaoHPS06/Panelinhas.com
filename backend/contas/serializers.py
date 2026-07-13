@@ -44,3 +44,37 @@ class RegisterSerializer(serializers.ModelSerializer):
         usuario.save()
 
         return usuario
+
+
+class PerfilSerializer(serializers.ModelSerializer):
+    # Expõe first_name como "nome" pro front, mantendo o padrão que já usamos
+    nome = serializers.CharField(source="first_name")
+
+    class Meta:
+        model = UsuarioCustomizado
+        fields = ["id", "nome", "email", "telefone"]
+        read_only_fields = ["id"]
+
+    def validate_email(self, value):
+        # Garante e-mail único, mas ignora o próprio usuário na checagem
+        usuario_atual = self.instance
+        if UsuarioCustomizado.objects.exclude(pk=usuario_atual.pk).filter(email=value).exists():
+            raise serializers.ValidationError("Já existe uma conta com este email.")
+        return value
+
+
+class AlterarSenhaSerializer(serializers.Serializer):
+    senha_atual = serializers.CharField(write_only=True)
+    nova_senha = serializers.CharField(write_only=True)
+    confirmar_nova_senha = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        if data["nova_senha"] != data["confirmar_nova_senha"]:
+            raise serializers.ValidationError(
+                {"confirmar_nova_senha": "As senhas não coincidem."}
+            )
+        if len(data["nova_senha"]) < 8:
+            raise serializers.ValidationError(
+                {"nova_senha": "A nova senha deve ter pelo menos 8 caracteres."}
+            )
+        return data
