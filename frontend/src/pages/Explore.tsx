@@ -1,106 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { NewPredioLoja, type Loja} from "../components/NewPredioLoja";
+import { NewPredioLoja, type LojaData} from "../components/PredioLoja";
 
-const LOJAS_MOCK: Loja[] =[
-    {
-    id: 1,
-    name: "Pizzaria do Zé",
-    category: "🍽️ Alimentação",
-    emoji: "🍕",
-    rating: 4.8,
-    followers: 127,
-    isOpen: true,
-    windows: [true, false, true],
-    primary: "#E2703A",
-    secondary: "#FFD9A8",
-  },
-  {
-    id: 2,
-    name: "Moda Feminina Ana",
-    category: "👗 Moda",
-    emoji: "👗",
-    rating: 4.6,
-    followers: 89,
-    isOpen: true,
-    windows: [false, true, false],
-    primary: "#9B59D0",
-    secondary: "#EDD8F8",
-  },
-  {
-    id: 3,
-    name: "TechShop Eletrônicos",
-    category: "💻 Eletrônicos",
-    emoji: "💻",
-    rating: 4.7,
-    followers: 234,
-    isOpen: true,
-    tall: true,
-    windows: [true, true, false],
-    primary: "#3F7FD1",
-    secondary: "#C8DDF8",
-  },
-  {
-    id: 4,
-    name: "Beleza Natural",
-    category: "💄 Beleza",
-    emoji: "💄",
-    rating: 4.9,
-    followers: 312,
-    isOpen: false,
-    windows: [false, true, false],
-    primary: "#D9568C",
-    secondary: "#FFD8E8",
-  },
-  {
-    id: 5,
-    name: "Artesanato Mineiro",
-    category: "🏺 Artesanato",
-    emoji: "🏺",
-    rating: 4.5,
-    followers: 56,
-    isOpen: true,
-    windows: [false, true, false],
-    primary: "#4F9C42",
-    secondary: "#D4EEC8",
-  },
-  {
-    id: 6,
-    name: "Padaria Estrela",
-    category: "🍽️ Alimentação",
-    emoji: "🥐",
-    rating: 4.8,
-    followers: 178,
-    isOpen: true,
-    windows: [true, false, true],
-    primary: "#C99020",
-    secondary: "#FFF2C4",
-  },
-  {
-    id: 7,
-    name: "Pet Amor",
-    category: "🐾 Pet",
-    emoji: "🐾",
-    rating: 4.4,
-    followers: 41,
-    isOpen: true,
-    windows: [false, true, false],
-    primary: "#5878C0",
-    secondary: "#D8E8F8",
-  },
-  {
-    id: 8,
-    name: "Livraria Cultura",
-    category: "📚 Livros",
-    emoji: "📚",
-    rating: 4.7,
-    followers: 93,
-    isOpen: false,
-    windows: [true, false, true],
-    primary: "#A06820",
-    secondary: "#F0DEBA",
-  },
-]
 
 const categorias = [
     "🏪 Todas",
@@ -113,6 +14,15 @@ const categorias = [
     "📚 Livros",
     "🌱 Aberto agora",
 ];
+//Remove o primeiro emoji e espacos de uma dada string
+const semEmoji = (texto: string) =>
+  texto.replace(/^\p{Extended_Pictographic}\uFE0F?\s*/u, "").trim().toLowerCase();
+
+const encontrarCategoriaComEmoji = (categoriaBackend?: string) => {
+  const nome = semEmoji(categoriaBackend || "Outros");
+  const encontrada = categorias.find((cat) => semEmoji(cat) === nome);
+  return encontrada ?? `🏪 ${categoriaBackend || "Outros"}`;
+};
 
 const BuildingSkeleton = () => (
   <div className="w-40.5 flex flex-col items-center gap-2 animate-pulse">
@@ -145,19 +55,43 @@ const ORDENACOES: { key: Ordenacao; label: string; emoji: string }[] = [
 ];
 
 export const Explore = () => {
-    const navigate = useNavigate();
-    const [lojas, setLojas] =useState<Loja[]>([])
-    const [loading, setLoading] = useState(true);
-    const [categoriaAtiva, setCategoriaAtiva] = useState("🏪 Todas");
-    const [ordenacao, setOrdenacao] = useState<Ordenacao>("rating");
+  const navigate = useNavigate();
+  const [lojas, setLojas] =useState<LojaData[]>([])
+  const [loading, setLoading] = useState(true);
+  const [categoriaAtiva, setCategoriaAtiva] = useState("🏪 Todas");
+  const [ordenacao, setOrdenacao] = useState<Ordenacao>("rating");
+
+  const buscarLojas = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/lojas/");
+      if (res.ok) {
+        const dadosBackend = await res.json();
+
+        const lojasAdaptadas = dadosBackend.map((loja: any) => ({
+          id: loja.id,
+          name: loja.nome,
+          category: encontrarCategoriaComEmoji(loja.categoria),
+          emoji: loja.emoji || "🏪",
+          rating: loja.nota_media || 5.0,
+          followers: loja.total_seguidores || 0,
+          isOpen: loja.esta_aberta ?? true,
+          tall: loja.tall || false,
+          windows: loja.janelas || [true, true, true, false],
+          primary: loja.cor_primaria || "#D85A30",
+          secondary: loja.cor_secundaria || "#FAF7F4",
+        }));
+
+        setLojas(lojasAdaptadas);
+      }
+    } catch (error) {
+      console.error("Erro ao carregar as lojas do Explore:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
     useEffect(() => {
-        const temporizador = setTimeout(() => {
-            setLojas(LOJAS_MOCK);
-            setLoading(false);
-        }, 800);
-
-        return () => clearTimeout(temporizador);
+      buscarLojas();
     }, []);
 
     let lojasExibidas = lojas;
@@ -258,7 +192,7 @@ export const Explore = () => {
               <div className="bg-white/90 border border-marrom-rustico/10 rounded-2xl p-12 text-center shadow-sm max-w-xl mx-auto">
                 <span className="text-5xl block mb-4">🔍</span>
                 <h3 className="text-lg font-bold text-[#2A1F14] mb-1">
-                  Nenhuma loja encontrada
+                  A rua está vazia
                 </h3>
                 <p className="text-[#6B5040] text-sm mb-6">
                   Não há lojas para esse filtro no momento. Tente escolher outra
