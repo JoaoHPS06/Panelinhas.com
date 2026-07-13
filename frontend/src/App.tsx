@@ -7,6 +7,7 @@ import { Home } from "./components/Home";
 import { CadastroLoja } from "./pages/CadastroLoja";
 import { MinhasLojas } from "./pages/MinhasLojas";
 import { Explore } from "./pages/Explore"
+import { Perfil } from "./pages/Perfil";
 
 // 1. Layout Base
 const LayoutComNavbar = () => {
@@ -33,14 +34,6 @@ export const ProtectedRoute = () => {
 const PaginaInicial = () => (
   <div>
     <Home />
-    <main className="p-8">
-      <h1 className="text-2xl font-bold text-[#2A1F14]">
-        Bem-vindo ao Panelinhas!
-      </h1>
-      <p className="text-[#6B5040]">
-        A rua das lojas locais começa aqui.
-      </p>
-    </main>
   </div>
 );
 
@@ -69,6 +62,7 @@ function App() {
             <Route path="/feed" element={<div>Aqui vai a página do Feed</div>} />
             <Route path="/minhas-lojas" element={<MinhasLojas />} />
             <Route path="/cadastro-loja" element={<CadastroLoja />} />
+            <Route path="/perfil" element={<Perfil />} />
           </Route>
 
         </Routes>

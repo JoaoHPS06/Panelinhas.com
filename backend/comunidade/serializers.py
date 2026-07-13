@@ -6,7 +6,7 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = '__all__'
         # O backend descobre a loja automaticamente baseado em quem está logado
-        read_only_fields = ['loja', 'criado_em']
+        read_only_fields = ['criado_em']
 
 
 class AvaliacaoSerializer(serializers.ModelSerializer):
@@ -25,5 +25,4 @@ class PerguntaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pergunta
         fields = '__all__'
-        # O autor não pode fraudar a resposta ou a data da resposta na hora de criar a pergunta
-        read_only_fields = ['autor', 'texto_resposta', 'respondido_em', 'criado_em']
+        read_only_fields = ['autor', 'respondido_em', 'criado_em']

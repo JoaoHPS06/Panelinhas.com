@@ -4,9 +4,12 @@ interface CardProdutoProps {
   descricao: string;
   preco: number;
   ehNovo?: boolean; // Determina se a tag verde vai aparecer
+  isOwner?: boolean;     // NOVO: mostra os botões de editar/excluir só para o dono
+  onDelete?: () => void; // NOVO: ação disparada ao clicar em excluir
+  onEdit?: () => void;   // NOVO: ação disparada ao clicar em editar
 }
 
-export const CardProduto = ({ image, nome, descricao, preco, ehNovo }: CardProdutoProps) => {
+export const CardProduto = ({ image, nome, descricao, preco, ehNovo, isOwner, onDelete, onEdit }: CardProdutoProps) => {
   return (
     <div 
       onMouseMove={(e) => typeof window !== 'undefined' && (window as any).tilt?.(e.nativeEvent, e.currentTarget)} 
@@ -18,6 +21,34 @@ export const CardProduto = ({ image, nome, descricao, preco, ehNovo }: CardProdu
       {ehNovo && (
         <div className="absolute -top-2 -left-2 bg-verde-salvia text-white text-xs font-black uppercase tracking-wider px-3 py-1.5 rounded-lg shadow-md z-20 animate-bounce">
           Novo
+        </div>
+      )}
+
+      {/* BOTÕES DE EDITAR/EXCLUIR (Canto Superior Direito) — só para o dono */}
+      {isOwner && (
+        <div className="absolute -top-2 -right-2 z-20 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit?.();
+            }}
+            title="Editar produto"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-marrom-rustico border border-marrom-rustico/20 shadow-md hover:bg-marrom-rustico hover:text-white cursor-pointer"
+          >
+            ✏️
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.();
+            }}
+            title="Excluir produto"
+            className="w-8 h-8 flex items-center justify-center rounded-full bg-white text-vermelho-pimenta border border-vermelho-pimenta/20 shadow-md hover:bg-vermelho-pimenta hover:text-white cursor-pointer"
+          >
+            🗑️
+          </button>
         </div>
       )}
 

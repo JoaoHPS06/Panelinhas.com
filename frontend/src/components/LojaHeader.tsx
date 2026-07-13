@@ -1,4 +1,4 @@
-import { BotaoPrincipal } from "./BotaoPrincipal.tsx";
+import { useState, useEffect } from "react";
 import { type LojaData } from "./PredioLoja.tsx";
 
 interface LojaHeaderProps {
@@ -7,9 +7,50 @@ interface LojaHeaderProps {
   setAbaAtiva: (novaAba: string) => void;
   onContatoClick: () => void;
   onVoltar: () => void;
+  isOwner?: boolean;           // <-- NOVO: Recebe a confirmação se é o dono
+  onToggleStatus?: () => void; // <-- NOVO: Recebe a função de abrir/fechar
 }
 
-export const LojaHeader = ({ loja, aba, setAbaAtiva, onContatoClick, onVoltar } : LojaHeaderProps) => {
+export const LojaHeader = ({ loja, aba, setAbaAtiva, onContatoClick, onVoltar, isOwner, onToggleStatus } : LojaHeaderProps) => {
+    const [isSeguindo, setIsSeguindo] = useState(false);
+    const [loadingSeguir, setLoadingSeguir] = useState(false);
+
+    useEffect(() => {
+        setIsSeguindo(loja.usuario_segue || false);
+    }, [loja.usuario_segue]);
+    
+    const handleSeguirClick = async () => {
+        const userString = localStorage.getItem("Panelinha_user");
+        const userData = userString ? JSON.parse(userString) : null;
+        const token = userData?.access;
+
+        if (!token) {
+            alert("Você precisa estar logado para seguir uma loja.");
+            return;
+        }
+
+        setLoadingSeguir(true);
+        try {
+            const res = await fetch(`http://localhost:8000/api/lojas/${loja.id}/seguir/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+
+            if (res.ok) {
+                setIsSeguindo(!isSeguindo);
+            } else {
+                console.error("Erro ao seguir a loja");
+            }
+        } catch (err) {
+            console.error("Erro de conexão", err);
+        } finally {
+            setLoadingSeguir(false);
+        }
+    };
+
     return(
         <>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[150%] h-150 bg-linear-to-br from-areia/50 to-amarelo-mostarda/10 rounded-b-full blur-3xl -z-10 pointer-events-none"></div>
@@ -19,7 +60,7 @@ export const LojaHeader = ({ loja, aba, setAbaAtiva, onContatoClick, onVoltar } 
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center, #FBBB01_0%, transparent_60%)] blur-3xl opacity-40"></div>
                 <span className="relative z-10 drop-shadow-sm">{loja.emoji}</span>
                 
-                <div className="absolute top-6 left-0 right-0 max-w-6xl mx-auto px-4 md:px-8 pointer-events-none">
+                <div className="absolute top-6 left-0 right-0 max-w-6xl mx-auto px-4 md:px-8 pointer-events-none flex justify-between items-center">
                     <button 
                         onClick={onVoltar}
                         className="pointer-events-auto flex items-center gap-2 bg-white/70 hover:bg-white/90 backdrop-blur-md border border-white/80 transition-all duration-300 rounded-full px-5 py-2.5 text-sm font-bold text-cafe-expresso shadow-sm hover:shadow-md cursor-pointer">
@@ -43,7 +84,17 @@ export const LojaHeader = ({ loja, aba, setAbaAtiva, onContatoClick, onVoltar } 
                     <div className="w-28 h-28 bg-white/90 backdrop-blur-md rounded-2xl border-4 border-white shadow-[0_12px_32px_rgba(45,26,13,0.06)] flex items-center justify-center text-5xl -mt-16 relative z-10 transition-transform hover:scale-105 cursor-pointer">
                         {loja.emoji}
                     </div>
-                    <BotaoPrincipal texto='+ Seguir'/>
+                    
+                    {/* Oculta o botão Seguir se o usuário for o dono da loja */}
+                    {!isOwner && (
+                        <button 
+                            onClick={handleSeguirClick}
+                            disabled={loadingSeguir}
+                            className={`font-bold px-6 py-2.5 rounded-full shadow-sm text-sm cursor-pointer transition-colors duration-300 disabled:opacity-50 ${isSeguindo ? 'bg-verde-salvia text-white hover:bg-verde-salvia/90' : 'bg-marrom-rustico text-white hover:bg-[#E5A800] hover:text-marrom-rustico'}`}
+                        >
+                            {loadingSeguir ? '...' : isSeguindo ? '✓ Seguindo' : '+ Seguir'}
+                        </button>
+                    )}
                 </div>
 
                 <div className="mt-4 pb-6">
@@ -60,18 +111,36 @@ export const LojaHeader = ({ loja, aba, setAbaAtiva, onContatoClick, onVoltar } 
                             <span className="font-bold text-cafe-expresso">{loja.rating}</span>
                         </div>
                         <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm px-4 py-1.5 rounded-xl border border-white shadow-sm">
-                            <span className="font-bold text-cafe-expresso">{loja.followers}</span>
+                            <span className="font-bold text-cafe-expresso">
+                                {isSeguindo ? loja.followers + 1 : loja.followers}
+                            </span>
                             <span className="text-cafe-expresso/60 text-sm font-semibold">seguidores</span>
                         </div>
                         
-                        {loja.isOpen ? (
-                            <div className="bg-verde-salvia/10 backdrop-blur-sm text-verde-salvia font-bold uppercase text-xs tracking-wider px-4 py-2 rounded-xl border border-verde-salvia/20">
-                                Aberto Agora
-                            </div>
+                        {/* NOVO: Lógica que troca a etiqueta estática por um botão se for o dono */}
+                        {isOwner ? (
+                            <button 
+                                onClick={onToggleStatus}
+                                title={loja.isOpen ? "Clique para fechar sua loja" : "Clique para abrir sua loja"}
+                                className={`font-bold uppercase text-xs tracking-wider px-4 py-2 rounded-xl border backdrop-blur-sm cursor-pointer transition-all duration-300 hover:shadow-md flex items-center gap-2 active:scale-95 ${
+                                    loja.isOpen 
+                                    ? "bg-verde-salvia text-white border-verde-salvia hover:bg-verde-salvia/80" 
+                                    : "bg-vermelho-pimenta text-white border-vermelho-pimenta hover:bg-vermelho-pimenta/80"
+                                }`}
+                            >
+                                <span>{loja.isOpen ? "🔓 Aberto" : "🔒 Fechado"}</span>
+                                <span className="bg-white/20 px-2 py-0.5 rounded text-[10px]">Alterar</span>
+                            </button>
                         ) : (
-                            <div className="bg-vermelho-pimenta/10 backdrop-blur-sm text-vermelho-pimenta font-bold uppercase text-xs tracking-wider px-4 py-2 rounded-xl border border-vermelho-pimenta/20">
-                                Fechado
-                            </div>
+                            loja.isOpen ? (
+                                <div className="bg-verde-salvia/10 backdrop-blur-sm text-verde-salvia font-bold uppercase text-xs tracking-wider px-4 py-2 rounded-xl border border-verde-salvia/20">
+                                    Aberto Agora
+                                </div>
+                            ) : (
+                                <div className="bg-vermelho-pimenta/10 backdrop-blur-sm text-vermelho-pimenta font-bold uppercase text-xs tracking-wider px-4 py-2 rounded-xl border border-vermelho-pimenta/20">
+                                    Fechado
+                                </div>
+                            )
                         )}
                     </div>
                 </div>
