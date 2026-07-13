@@ -39,6 +39,7 @@ export const MinhasLojas = () => {
   const [nomeLojaRemover, setNomeLojaRemover] = useState("");
   const [erroRemover, setErroRemover] = useState("");
   const [removendo, setRemovendo] = useState(false);
+  const [modalEditarAberto, setModalEditarAberto] = useState(false);
 
   useEffect(() => {
     buscarLojas();
@@ -177,6 +178,15 @@ export const MinhasLojas = () => {
             texto="+ Inaugurar Nova Loja"
             onClick={() => navigate("/cadastro-loja")}
           />
+          {abaAtiva === "proprias" && lojasProprias.length > 0 && (
+            <button
+              onClick={() => setModalEditarAberto(true)}
+              className="justify-center items-center text-center text-blue-500 text-sm font-semibold bg-blue-50 p-2 rounded-xl border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+              type="button"
+            >
+              Editar Loja
+            </button>
+          )}
           {abaAtiva === "proprias" && lojasProprias.length > 0 && (
             <button
               onClick={() => {
@@ -349,6 +359,50 @@ export const MinhasLojas = () => {
                 {removendo ? "Removendo..." : "Confirmar Exclusão"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE EDIÇÃO */}
+      {modalEditarAberto && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setModalEditarAberto(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-xl font-extrabold text-[#2A1F14] mb-2">
+              Qual loja deseja editar?
+            </h2>
+            <p className="text-sm text-[#6B5040] mb-4">
+              Selecione o estabelecimento para alterar fachada, nome, cores ou endereço.
+            </p>
+
+            <div className="flex flex-col gap-3 max-h-60 overflow-y-auto pr-2">
+              {lojasProprias.map((loja) => (
+                <button
+                  key={loja.id}
+                  onClick={() => navigate(`/editar-loja/${loja.id}`)}
+                  className="flex items-center gap-4 bg-[#FAF7F4] border border-[#E2D8D0] p-3 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer text-left w-full"
+                >
+                  <span className="text-2xl">{loja.emoji}</span>
+                  <div>
+                    <span className="block font-bold text-[#2A1F14]">{loja.name}</span>
+                    <span className="text-xs text-[#8C7361]">{loja.category}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setModalEditarAberto(false)}
+              className="w-full mt-6 py-2 rounded-xl border border-marrom-rustico/20 text-sm font-bold text-marrom-rustico/70 hover:bg-marrom-rustico/5 transition-colors cursor-pointer"
+            >
+              Cancelar
+            </button>
           </div>
         </div>
       )}
