@@ -182,17 +182,17 @@ export const Explore = () => {
         <div className="border-b border-marrom-rustico/10 pb-6">
           <h1
             className="text-4xl font-extrabold text-[#2A1F14]"
-            style={{ fontFamily: "Fraunces, Georgia, serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             Explore
           </h1>
-          <p className="text-[#6B5040] text-sm mt-1">
+          <p className="pt-1 text-[#6B5040] text-base mt-1">
             Descubra as lojas mais bem avaliadas e mais seguidas da nossa rua virtual.
           </p>
         </div>
 
         <div>
-          <span className="text-xs font-extrabold uppercase tracking-widest text-marrom-rustico/40 block mb-3">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-[#9E8878] block mb-3">
             Tipo de loja
           </span>
           <div className="flex flex-wrap gap-2">
@@ -202,7 +202,7 @@ export const Explore = () => {
                 onClick={() => setCategoriaAtiva(cat)}
                 className={`px-4 py-2 rounded-full text-sm font-bold transition-colors cursor-pointer ${
                   categoriaAtiva === cat
-                    ? "bg-vermelho-pimenta text-white shadow-md"
+                    ? "bg-[#D85A30] text-white shadow-md"
                     : "bg-white border border-marrom-rustico/15 text-marrom-rustico/70 hover:border-vermelho-pimenta/40"
                 }`}
               >
@@ -213,7 +213,7 @@ export const Explore = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <span className="text-xs font-extrabold uppercase tracking-widest text-marrom-rustico/40">
+          <span className="text-xs font-extrabold uppercase tracking-widest text-[#9E8878]">
             {loading
               ? "Carregando lojas..."
               : `${lojasExibidas.length} ${lojasExibidas.length === 1 ? "loja encontrada" : "lojas encontradas"}`}
@@ -241,10 +241,7 @@ export const Explore = () => {
             className="absolute inset-0"
             style={{ background: "linear-gradient(180deg, #BFE0F5 0%, #EAF6FD 65%, #FAF7F4 100%)" }}
           />
-          <div
-            className="absolute top-6 right-10 w-16 h-16 rounded-full opacity-80 pointer-events-none"
-            style={{ background: "radial-gradient(circle, #FFE9A8 0%, rgba(255,233,168,0) 70%)" }}
-          />
+          <div/>
           <div className="relative p-8">
             {loading ? (
               <>
