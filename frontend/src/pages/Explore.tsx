@@ -281,7 +281,10 @@ export const Explore = () => {
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-y-12 gap-x-6 justify-items-center">
                   {lojasExibidas.map((loja) => (
-                    <div key={loja.id} className="flex flex-col items-center gap-2">
+                    <div 
+                      key={loja.id}
+                      onClick={() => navigate(`/loja/${loja.id}`)}
+                      className="flex flex-col items-center gap-2 hover:text-vermelho-pimenta focus:text-vermelho-pimenta transition-colors cursor-pointer">
                       <NewPredioLoja loja={loja} />
                       <span
                         className={`text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full ${
