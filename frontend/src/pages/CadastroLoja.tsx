@@ -13,7 +13,7 @@ const EMOJIS_POR_CATEGORIA: Record<string, string[]> = {
 
 export const CadastroLoja = () => {
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>(); // Pega o ID se estiver editando
+  const { id } = useParams<{ id: string }>(); 
   const isEditMode = !!id;
 
   const [nome, setNome] = useState("");
@@ -24,10 +24,13 @@ export const CadastroLoja = () => {
   const [corSecundaria, setCorSecundaria] = useState("#F3E5D8");
   const [telefone, setTelefone] = useState("");
   const [endereco, setEndereco] = useState("");
+  
+  // NOVO: Estado para gerenciar as janelas (array de booleanos)
+  const [janelas, setJanelas] = useState<boolean[]>([true, false, true]);
 
   const [erro, setErro] = useState("");
   const [loading, setLoading] = useState(false);
-  const [bloqueado, setBloqueado] = useState(false); // Para impedir edição se não for o dono
+  const [bloqueado, setBloqueado] = useState(false); 
 
   useEffect(() => {
     if (isEditMode) {
@@ -49,7 +52,6 @@ export const CadastroLoja = () => {
 
       const dadosBackend = await resposta.json();
 
-      // VERIFICAÇÃO DE SEGURANÇA: Só o dono pode editar
       let loggedInUserId = null;
       if (token) {
         const payloadBase64 = token.split('.')[1];
@@ -63,7 +65,6 @@ export const CadastroLoja = () => {
         return;
       }
 
-      // Preenche os campos com os dados existentes
       setNome(dadosBackend.nome || "");
       setCategoria(dadosBackend.categoria || "Outros");
       setDescricao(dadosBackend.descricao || "");
@@ -72,6 +73,9 @@ export const CadastroLoja = () => {
       setCorSecundaria(dadosBackend.cor_secundaria || "#FAF7F4");
       setTelefone(dadosBackend.telefone || "");
       setEndereco(dadosBackend.endereco || "");
+      
+      // NOVO: Carrega as janelas do banco de dados
+      setJanelas(dadosBackend.janelas || []);
       
     } catch (err: any) {
       setErro(err.message);
@@ -105,6 +109,24 @@ export const CadastroLoja = () => {
     setTelefone(mascaraTelefone(e.target.value));
   };
 
+  // Funções de manipulação das janelas
+  const alternarLuzJanela = (index: number) => {
+    if (bloqueado) return;
+    const novasJanelas = [...janelas];
+    novasJanelas[index] = !novasJanelas[index];
+    setJanelas(novasJanelas);
+  };
+
+  const removerJanela = (index: number) => {
+    if (bloqueado) return;
+    setJanelas(janelas.filter((_, i) => i !== index));
+  };
+
+  const adicionarJanela = () => {
+    if (bloqueado || janelas.length >= 4) return;
+    setJanelas([...janelas, true]); // Adiciona uma nova janela acesa por padrão
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (bloqueado) return;
@@ -127,9 +149,9 @@ export const CadastroLoja = () => {
         cor_secundaria: corSecundaria,
         telefone, 
         endereco, 
+        janelas // NOVO: Envia o array de janelas que o usuário montou
       };
 
-      // Se for edição manda PATCH para /lojas/id/, se for criação manda POST para /lojas/
       const url = isEditMode ? `http://localhost:8000/api/lojas/${id}/` : "http://localhost:8000/api/lojas/";
       const method = isEditMode ? "PATCH" : "POST";
 
@@ -164,7 +186,7 @@ export const CadastroLoja = () => {
     rating: 5.0,
     followers: 0,
     isOpen: true,
-    windows: [true, false, true, false],
+    windows: janelas, // NOVO: O preview recebe as janelas em tempo real
     primary: corPrimaria,
     secondary: corSecundaria,
   };
@@ -246,6 +268,59 @@ export const CadastroLoja = () => {
             </div>
           </div>
 
+          {/* NOVO: Construtor de Janelas */}
+          <div className="pt-2">
+            <label className="text-xs font-bold uppercase text-[#8C7361] tracking-wider mb-2 flex justify-between items-center">
+              <span>Arquitetura: Janelas Superiores</span>
+              <span className="text-[10px] lowercase text-[#D85A30] font-bold bg-orange-100 px-2 py-0.5 rounded-full">
+                {janelas.length}/4
+              </span>
+            </label>
+            <div className="p-4 bg-[#FAF7F4] border border-[#E2D8D0] rounded-2xl flex items-center gap-4 min-h-25">
+              
+              {janelas.length === 0 && (
+                <span className="text-sm text-[#8C7361] italic flex-1 text-center">
+                  Sua loja não terá janelas no segundo andar.
+                </span>
+              )}
+
+              {janelas.map((acesa, index) => (
+                <div key={index} className="flex flex-col items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={bloqueado}
+                    onClick={() => alternarLuzJanela(index)}
+                    className={`w-10 h-12 border-[3px] rounded-t-sm transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 hover:scale-105 ${
+                      acesa 
+                        ? "bg-[#FFE888] border-[#E8C040] shadow-[0_0_15px_rgba(255,232,136,0.5)]" 
+                        : "bg-[#4A3A2F]/20 border-[#4A3A2F]/40"
+                    }`}
+                    title={acesa ? "Apagar luz" : "Acender luz"}
+                  />
+                  <button
+                    type="button"
+                    disabled={bloqueado}
+                    onClick={() => removerJanela(index)}
+                    className="text-[10px] text-red-400 font-bold hover:text-red-600 uppercase cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Remover
+                  </button>
+                </div>
+              ))}
+              
+              {janelas.length < 4 && !bloqueado && (
+                <button
+                  type="button"
+                  onClick={adicionarJanela}
+                  className="w-10 h-12 border-2 border-dashed border-[#8C7361]/50 rounded-t-sm flex items-center justify-center text-[#8C7361] text-xl font-light hover:bg-white hover:border-[#D85A30] hover:text-[#D85A30] transition-colors cursor-pointer ml-2"
+                  title="Construir nova janela"
+                >
+                  +
+                </button>
+              )}
+            </div>
+          </div>
+
           <button type="submit" disabled={loading || bloqueado} className="w-full bg-[#D85A30] text-white font-black uppercase tracking-wider py-4 rounded-xl hover:bg-[#C24B24] transition-colors mt-6 cursor-pointer disabled:bg-gray-400 disabled:cursor-not-allowed">
             {loading ? "Salvando..." : (isEditMode ? "Salvar Alterações" : "Inaugurar Estabelecimento")}
           </button>
@@ -256,7 +331,7 @@ export const CadastroLoja = () => {
             <span className="text-[10px] font-black uppercase text-sky-800/40 tracking-widest absolute top-6">
               Visualização na Rua
             </span>
-            <div className="scale-125 transform origin-bottom mt-auto">
+            <div className="scale-125 transform origin-bottom mt-auto transition-all duration-300">
               <NewPredioLoja loja={lojaPreview} />
             </div>
           </div>
