@@ -40,7 +40,6 @@ export const Navbar = () => {
 
   // Se estiver logado, todo mundo vê o Feed e as Lojas (seguidas/criadas)
   if (isLogged) {
-    links.push({ nome: "Meu Feed", caminho: "/feed" });
     links.push({ nome: "Minhas Lojas", caminho: "/minhas-lojas" });
   }
 

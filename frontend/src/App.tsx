@@ -59,9 +59,9 @@ function App() {
 
           {/* BLOCO 3: Rotas Privadas (Protegidas por Login) */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/feed" element={<div>Aqui vai a página do Feed</div>} />
             <Route path="/minhas-lojas" element={<MinhasLojas />} />
             <Route path="/cadastro-loja" element={<CadastroLoja />} />
+            <Route path="/editar-loja/:id" element={<CadastroLoja />} />
             <Route path="/perfil" element={<Perfil />} />
           </Route>
 

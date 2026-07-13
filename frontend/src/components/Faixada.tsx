@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { buildLojaColors } from "../utils/colorUtils";
 
@@ -17,24 +16,11 @@ export interface Loja {
     secondary: string;
 }
 
-
 interface StoreStreetProps {
     listaDeLojas: Loja[];
 }
 
 /* ===================== CONSTANTES CENÁRIO ===================== */
-const categorias = [
-    "🏪 Todas",
-    "🍽️ Alimentação",
-    "👗 Moda",
-    "💻 Eletrônicos",
-    "💄 Beleza",
-    "🏺 Artesanato",
-    "🐾 Pet",
-    "📚 Livros",
-    "🌱 Aberto agora",
-];
-
 const sidewalkItems = ["🌳", "🕯️", "🌳", "🌳", "🕯️", "🌳", "🌳", "🕯️", "🌳"];
 
 const skylineRects: [number, number, number, number, number][] = [
@@ -91,43 +77,8 @@ const StreetBuilding = ({ loja }: { loja: Loja }) => {
 
 /* ===================== COMPONENTE PRINCIPAL ===================== */
 export const Faixada = ({ listaDeLojas }: StoreStreetProps) => {
-    const [categoriaAtiva, setCategoriaAtiva] = useState("🏪 Todas");
-
-    // Realiza a filtragem dinamicamente baseado na categoria selecionada
-    const lojasFiltradas = listaDeLojas.filter((loja) => {
-        if (categoriaAtiva === "🏪 Todas") return true;
-        if (categoriaAtiva === "🌱 Aberto agora") return loja.isOpen;
-        return loja.category === categoriaAtiva;
-    });
-
     return (
-        <div className="space-y-5">
-            {/* Chips de Categoria */}
-            <div className="bg-white border-b border-black/8 py-3.5 px-7 flex flex-col items-start gap-3">
-
-                {/* O título agora fica no topo sozinho, adicionado um leve margin-bottom se quiser espaçar mais */}
-                <span className="text-[11px] font-extrabold uppercase tracking-[1.2px] text-[#9E8878] whitespace-nowrap mb-1">
-                    Tipo de loja
-                </span>
-
-                {/* Os botões continuam quebrando linha se faltar espaço na tela (flex-wrap) */}
-                <div className="flex gap-2 flex-wrap">
-                    {categorias.map((cat) => (
-                        <button
-                            key={cat}
-                            type="button"
-                            onClick={() => setCategoriaAtiva(cat)}
-                            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-[13px] font-bold border-[1.5px] transition-all duration-200 cursor-pointer ${cat === categoriaAtiva
-                                ? "bg-[#D85A30] text-white border-[#D85A30]"
-                                : "bg-[#F2EDE6] text-[#6B5040] border-black/8 hover:border-[#D85A30] hover:text-[#D85A30] hover:bg-[#FAECE7]"
-                                }`}
-                        >
-                            {cat}
-                        </button>
-                    ))}
-                </div>
-            </div>
-
+        <div className="space-y-12 mt-4">
             {/* Cenário de Rua */}
             <section className="relative overflow-hidden">
                 <div className="relative overflow-hidden flex items-end min-h-80 px-7" style={{ background: "linear-gradient(180deg, #7FC8E8 0%, #B8E0F5 40%, #D8EEF8 100%)" }}>
@@ -142,13 +93,14 @@ export const Faixada = ({ listaDeLojas }: StoreStreetProps) => {
                         ))}
                     </svg>
 
-                    <div className="flex items-end w-full overflow-x-auto relative z-3 scrollbar-none">
-                        {lojasFiltradas.map((loja) => (
+                    <div className="flex items-end w-full overflow-x-auto relative z-3 scrollbar-none pb-4">
+                        {/* Agora renderizamos a lista inteira diretamente sem filtro */}
+                        {listaDeLojas.map((loja) => (
                             <StreetBuilding key={loja.id} loja={loja} />
                         ))}
-                        {lojasFiltradas.length === 0 && (
-                            <p className="text-white/80 text-sm pb-10 px-2">
-                                Nenhuma loja encontrada nessa categoria.
+                        {listaDeLojas.length === 0 && (
+                            <p className="text-[#2A1F14]/70 font-bold text-lg pb-10 px-2 w-full text-center">
+                                Nenhuma loja foi construída ainda!
                             </p>
                         )}
                     </div>
