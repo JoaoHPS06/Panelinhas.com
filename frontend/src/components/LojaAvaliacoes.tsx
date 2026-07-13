@@ -8,6 +8,7 @@ interface LojaAvaliacoesProps {
 interface Avaliacao {
   id: number;
   nome_usuario: string;
+  usuario?: number; // ID de quem avaliou — necessário pra saber se é o dono da avaliação
   nota: number;
   comentario: string;
   criado_em: string;
@@ -25,6 +26,25 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
 
   const userString = localStorage.getItem("Panelinha_user");
   const token = userString ? JSON.parse(userString).access : null;
+
+  // Descobre o ID do usuário logado (mesmo padrão usado em Loja.tsx para isOwner)
+  let loggedInUserId: number | string | null = null;
+  if (token) {
+    try {
+      const payloadBase64 = token.split('.')[1];
+      const decodedPayload = JSON.parse(atob(payloadBase64));
+      loggedInUserId = decodedPayload.user_id || decodedPayload.id;
+    } catch (e) {
+      console.error("Erro ao decodificar o token:", e);
+    }
+  }
+
+  // Estados para edição de uma avaliação já publicada
+  const [avaliacaoEditandoId, setAvaliacaoEditandoId] = useState<number | null>(null);
+  const [notaEdicao, setNotaEdicao] = useState<number>(0);
+  const [hoverNotaEdicao, setHoverNotaEdicao] = useState<number>(0);
+  const [comentarioEdicao, setComentarioEdicao] = useState("");
+  const [loadingEdicaoAvaliacao, setLoadingEdicaoAvaliacao] = useState(false);
 
   const buscarAvaliacoes = async () => {
     try {
@@ -84,6 +104,69 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
       alert("Erro de conexão.");
     } finally {
       setLoadingEnvio(false);
+    }
+  };
+
+  // Abre o modo de edição preenchendo a nota e o comentário atuais
+  const iniciarEdicaoAvaliacao = (av: Avaliacao) => {
+    setAvaliacaoEditandoId(av.id);
+    setNotaEdicao(av.nota);
+    setComentarioEdicao(av.comentario);
+  };
+
+  const cancelarEdicaoAvaliacao = () => {
+    setAvaliacaoEditandoId(null);
+    setNotaEdicao(0);
+    setHoverNotaEdicao(0);
+    setComentarioEdicao("");
+  };
+
+  const handleSalvarEdicaoAvaliacao = async (idAvaliacao: number) => {
+    if (notaEdicao === 0 || !comentarioEdicao.trim()) return;
+
+    setLoadingEdicaoAvaliacao(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/avaliacoes/${idAvaliacao}/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ nota: notaEdicao, comentario: comentarioEdicao })
+      });
+
+      if (res.ok) {
+        setAvaliacoes(prev => prev.map(av => av.id === idAvaliacao ? { ...av, nota: notaEdicao, comentario: comentarioEdicao } : av));
+        cancelarEdicaoAvaliacao();
+      } else {
+        alert("Erro ao salvar a edição da avaliação.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro de conexão.");
+    } finally {
+      setLoadingEdicaoAvaliacao(false);
+    }
+  };
+
+  const handleDeletarAvaliacao = async (idAvaliacao: number) => {
+    if (!confirm("Tem certeza que deseja excluir sua avaliação?")) return;
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/avaliacoes/${idAvaliacao}/`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        setAvaliacoes(prev => prev.filter(av => av.id !== idAvaliacao));
+        if (avaliacaoEditandoId === idAvaliacao) cancelarEdicaoAvaliacao();
+      } else {
+        alert("Erro ao excluir a avaliação.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro de conexão.");
     }
   };
 
@@ -181,11 +264,76 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
                     <span className="text-xs text-[#8C7361]">{formatarData(av.criado_em)}</span>
                   </div>
                 </div>
-                <div className="flex text-[#D85A30] text-lg">
-                  {"★".repeat(av.nota)}{"☆".repeat(5 - av.nota)}
+
+                <div className="flex items-center gap-3">
+                  {avaliacaoEditandoId !== av.id && (
+                    <div className="flex text-[#D85A30] text-lg">
+                      {"★".repeat(av.nota)}{"☆".repeat(5 - av.nota)}
+                    </div>
+                  )}
+                  {/* Só quem escreveu a avaliação pode editá-la ou excluí-la */}
+                  {loggedInUserId != null && av.usuario != null && String(av.usuario) === String(loggedInUserId) && avaliacaoEditandoId !== av.id && (
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => iniciarEdicaoAvaliacao(av)}
+                        className="text-xs font-bold text-[#8C7361] hover:text-[#D85A30] uppercase cursor-pointer"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => handleDeletarAvaliacao(av.id)}
+                        className="text-xs font-bold text-red-400 hover:text-red-600 uppercase cursor-pointer"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
-              <p className="text-[#4A3A2F]">{av.comentario}</p>
+
+              {avaliacaoEditandoId === av.id ? (
+                // MODO DE EDIÇÃO
+                <div>
+                  <div className="flex gap-1 mb-3">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onMouseEnter={() => setHoverNotaEdicao(star)}
+                        onMouseLeave={() => setHoverNotaEdicao(0)}
+                        onClick={() => setNotaEdicao(star)}
+                        className="text-2xl transition-transform hover:scale-110 focus:outline-none cursor-pointer"
+                        style={{ color: (hoverNotaEdicao || notaEdicao) >= star ? "#D85A30" : "#E2D8D0" }}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={comentarioEdicao}
+                    onChange={(e) => setComentarioEdicao(e.target.value)}
+                    className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-3 outline-none focus:border-[#D85A30] resize-none h-20 mb-3 text-[#4A3A2F] text-sm"
+                  />
+                  <div className="flex justify-end gap-3">
+                    <button
+                      onClick={cancelarEdicaoAvaliacao}
+                      disabled={loadingEdicaoAvaliacao}
+                      className="text-sm font-bold text-[#8C7361] hover:text-[#2A1F14] px-4 py-2 cursor-pointer disabled:opacity-50"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => handleSalvarEdicaoAvaliacao(av.id)}
+                      disabled={loadingEdicaoAvaliacao || notaEdicao === 0 || !comentarioEdicao.trim()}
+                      className="bg-[#2A1F14] text-white font-bold px-6 py-2 rounded-xl hover:bg-[#4A3A2F] transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      {loadingEdicaoAvaliacao ? "Salvando..." : "Salvar"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-[#4A3A2F]">{av.comentario}</p>
+              )}
             </div>
           ))
         )}

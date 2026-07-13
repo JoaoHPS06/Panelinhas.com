@@ -33,14 +33,6 @@ export const ProtectedRoute = () => {
 const PaginaInicial = () => (
   <div>
     <Home />
-    <main className="p-8">
-      <h1 className="text-2xl font-bold text-[#2A1F14]">
-        Bem-vindo ao Panelinhas!
-      </h1>
-      <p className="text-[#6B5040]">
-        A rua das lojas locais começa aqui.
-      </p>
-    </main>
   </div>
 );
 

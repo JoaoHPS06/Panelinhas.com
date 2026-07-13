@@ -12,11 +12,13 @@ export interface Produto {
 
 interface LojaProdutosProps {
   produtos: Produto[];
-  isOwner?: boolean;       // NOVO: Flag para saber se o usuário logado é o dono
-  onAddClick?: () => void; // NOVO: Ação disparada ao clicar em "Adicionar Produto"
+  isOwner?: boolean;                       // NOVO: Flag para saber se o usuário logado é o dono
+  onAddClick?: () => void;                 // NOVO: Ação disparada ao clicar em "Adicionar Produto"
+  onDeleteClick?: (idProduto: string) => void; // NOVO: Ação disparada ao clicar em "Excluir Produto"
+  onEditClick?: (produto: Produto) => void;    // NOVO: Ação disparada ao clicar em "Editar Produto"
 }
 
-export const LojaProdutos = ({ produtos, isOwner, onAddClick }: LojaProdutosProps) => {
+export const LojaProdutos = ({ produtos, isOwner, onAddClick, onDeleteClick, onEditClick }: LojaProdutosProps) => {
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
       
@@ -60,6 +62,9 @@ export const LojaProdutos = ({ produtos, isOwner, onAddClick }: LojaProdutosProp
               descricao={produto.descricao}
               preco={produto.preco}
               ehNovo={produto.ehNovo}
+              isOwner={isOwner}
+              onDelete={() => onDeleteClick?.(produto.id)}
+              onEdit={() => onEditClick?.(produto)}
             />
           ))}
         </div>

@@ -33,7 +33,7 @@ export const MinhasLojas = () => {
   const [lojasProprias, setLojasProprias] = useState<LojaData[]>([]);
   const [lojasSeguidas, setLojasSeguidas] = useState<LojaData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [abaAtiva, setAbaAtiva] = useState<"proprias" | "seguidas">("proprias");
+  const [abaAtiva, setAbaAtiva] = useState<"proprias" | "seguidas">("seguidas");
 
   const [modalRemoverAberto, setModalRemoverAberto] = useState(false);
   const [nomeLojaRemover, setNomeLojaRemover] = useState("");
@@ -196,17 +196,6 @@ export const MinhasLojas = () => {
       {/* Sistema de Abas */}
       <div className="flex gap-4 border-b border-marrom-rustico/10">
         <button
-          onClick={() => setAbaAtiva("proprias")}
-          className={`pb-3 text-sm font-bold uppercase tracking-wide transition-colors duration-300 relative cursor-pointer ${
-            abaAtiva === "proprias" ? "text-marrom-rustico" : "text-marrom-rustico/40 hover:text-marrom-rustico/70"
-          }`}
-        >
-          🏪 Meus Negócios ({lojasProprias.length})
-          {abaAtiva === "proprias" && (
-            <div className="absolute bottom-0 left-0 right-0 h-1 bg-marrom-rustico rounded-t-md"></div>
-          )}
-        </button>
-        <button
           onClick={() => setAbaAtiva("seguidas")}
           className={`pb-3 text-sm font-bold uppercase tracking-wide transition-colors duration-300 relative cursor-pointer ${
             abaAtiva === "seguidas" ? "text-marrom-rustico" : "text-marrom-rustico/40 hover:text-marrom-rustico/70"
@@ -214,6 +203,17 @@ export const MinhasLojas = () => {
         >
           ⭐ Lojas que Sigo ({lojasSeguidas.length})
           {abaAtiva === "seguidas" && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-marrom-rustico rounded-t-md"></div>
+          )}
+        </button>
+        <button
+          onClick={() => setAbaAtiva("proprias")}
+          className={`pb-3 text-sm font-bold uppercase tracking-wide transition-colors duration-300 relative cursor-pointer ${
+            abaAtiva === "proprias" ? "text-marrom-rustico" : "text-marrom-rustico/40 hover:text-marrom-rustico/70"
+          }`}
+        >
+          🏪 Meus Negócios ({lojasProprias.length})
+          {abaAtiva === "proprias" && (
             <div className="absolute bottom-0 left-0 right-0 h-1 bg-marrom-rustico rounded-t-md"></div>
           )}
         </button>

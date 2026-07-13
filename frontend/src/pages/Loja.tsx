@@ -31,6 +31,7 @@ export const Loja = () => {
 
   const [novoProduto, setNovoProduto] = useState({ nome: "", descricao: "", preco: "", emoji: "📦" });
   const [loadingProduto, setLoadingProduto] = useState(false);
+  const [produtoEditando, setProdutoEditando] = useState<Produto | null>(null); // NULO = criando; preenchido = editando
 
   const [mostrarEmojis, setMostrarEmojis] = useState(false);
 
@@ -117,14 +118,43 @@ export const Loja = () => {
     if (id) buscarDadosDaLoja();
   }, [id]);
 
-  const handleAdicionarProduto = async (e: React.SyntheticEvent) => {
+  // Abre o modal já preenchido para EDITAR um produto existente
+  const abrirEdicaoProduto = (produto: Produto) => {
+    setProdutoEditando(produto);
+    setNovoProduto({
+      nome: produto.nome,
+      descricao: produto.descricao,
+      preco: produto.preco.toFixed(2).replace(".", ","),
+      emoji: produto.image
+    });
+    setIsModalProdutoAberto(true);
+  };
+
+  // Abre o modal limpo para CRIAR um produto novo
+  const abrirNovoProduto = () => {
+    setProdutoEditando(null);
+    setNovoProduto({ nome: "", descricao: "", preco: "", emoji: "📦" });
+    setIsModalProdutoAberto(true);
+  };
+
+  const fecharModalProduto = () => {
+    setIsModalProdutoAberto(false);
+    setProdutoEditando(null);
+  };
+
+  const handleSalvarProduto = async (e: React.SyntheticEvent) => {
     e.preventDefault();
     if (!usuarioLogado?.access) return;
 
     setLoadingProduto(true);
     try {
-      const res = await fetch("http://localhost:8000/api/produtos/", {
-        method: "POST",
+      const url = produtoEditando
+        ? `http://localhost:8000/api/produtos/${produtoEditando.id}/`
+        : "http://localhost:8000/api/produtos/";
+      const method = produtoEditando ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${usuarioLogado.access}`
@@ -139,7 +169,7 @@ export const Loja = () => {
       });
 
       if (res.ok) {
-        setIsModalProdutoAberto(false);
+        fecharModalProduto();
         setNovoProduto({ nome: "", descricao: "", preco: "", emoji: "📦" });
         buscarDadosDaLoja(); 
       } else {
@@ -187,6 +217,30 @@ export const Loja = () => {
     }
   };
 
+  const handleDeletarProduto = async (idProduto: string) => {
+    if (!confirm("Tem certeza que deseja excluir este produto?")) return;
+
+    const userString = localStorage.getItem("Panelinha_user");
+    const token = userString ? JSON.parse(userString).access : null;
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/produtos/${idProduto}/`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (res.ok) {
+        // Atualiza o estado da loja na hora para remover o card da tela
+        setLojaAtual(prev => prev ? ({
+          ...prev, 
+          produtos: prev.produtos.filter(p => p.id !== idProduto)
+        }) : prev);
+      }
+    } catch (err) {
+      alert("Erro ao remover produto.");
+    }
+  };
+
   if (loading) return <div className="w-full min-h-screen flex items-center justify-center bg-creme-suave"><div className="animate-spin text-4xl">⏳</div></div>;
   if (erro || !lojaAtual) return <div className="w-full min-h-screen flex flex-col items-center justify-center bg-areia/20 p-4 text-center"><span className="text-6xl mb-4">🔍</span><h1 className="text-2xl font-black text-marrom-rustico">Estabelecimento não encontrado</h1><button onClick={() => navigate("/")} className="mt-4 bg-marrom-rustico text-white font-bold px-6 py-2 rounded-full text-sm">Voltar para a Home</button></div>;
 
@@ -207,7 +261,9 @@ export const Loja = () => {
           <LojaProdutos 
             produtos={lojaAtual.produtos} 
             isOwner={isOwner} 
-            onAddClick={() => setIsModalProdutoAberto(true)} 
+            onAddClick={abrirNovoProduto} 
+            onDeleteClick={handleDeletarProduto}
+            onEditClick={abrirEdicaoProduto}
           />
         )}
         
@@ -221,13 +277,13 @@ export const Loja = () => {
       {isModalProdutoAberto && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-md shadow-2xl relative">
-            <button onClick={() => setIsModalProdutoAberto(false)} className="absolute top-4 right-4 text-marrom-rustico/50 hover:text-marrom-rustico text-xl cursor-pointer">
+            <button onClick={fecharModalProduto} className="absolute top-4 right-4 text-marrom-rustico/50 hover:text-marrom-rustico text-xl cursor-pointer">
               ✕
             </button>
-            <h3 className="text-2xl font-black text-marrom-rustico mb-2">Novo Produto</h3>
-            <p className="text-sm text-cafe-expresso/60 mb-6">Adicione um novo item ao catálogo da sua loja.</p>
+            <h3 className="text-2xl font-black text-marrom-rustico mb-2">{produtoEditando ? "Editar Produto" : "Novo Produto"}</h3>
+            <p className="text-sm text-cafe-expresso/60 mb-6">{produtoEditando ? "Atualize as informações deste produto." : "Adicione um novo item ao catálogo da sua loja."}</p>
 
-            <form onSubmit={handleAdicionarProduto} className="flex flex-col gap-4">
+            <form onSubmit={handleSalvarProduto} className="flex flex-col gap-4">
               <div className="flex gap-4">
                 <div className="flex flex-col gap-1.5 w-1/4 relative">
                   <label className="text-xs font-bold uppercase text-marrom-rustico/70">Ícone</label>
@@ -275,7 +331,7 @@ export const Loja = () => {
               </div>
 
               <button type="submit" disabled={loadingProduto} className="w-full mt-4 bg-[#D85A30] text-white font-bold py-3 rounded-xl hover:bg-[#BF4A22] transition-colors shadow-md disabled:bg-gray-400 cursor-pointer">
-                {loadingProduto ? "Salvando..." : "Salvar no Catálogo"}
+                {loadingProduto ? "Salvando..." : (produtoEditando ? "Salvar Alterações" : "Salvar no Catálogo")}
               </button>
             </form>
           </div>

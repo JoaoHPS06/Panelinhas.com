@@ -26,6 +26,11 @@ export const LojaComunidade = ({ idLoja, isOwner }: LojaComunidadeProps) => {
   const [respostas, setRespostas] = useState<Record<number, string>>({});
   const [loadingResposta, setLoadingResposta] = useState<number | null>(null);
 
+  // Estado para edição de uma resposta já publicada
+  const [respostaEditandoId, setRespostaEditandoId] = useState<number | null>(null);
+  const [textoEdicaoResposta, setTextoEdicaoResposta] = useState("");
+  const [loadingEdicaoResposta, setLoadingEdicaoResposta] = useState(false);
+
   const userString = localStorage.getItem("Panelinha_user");
   const token = userString ? JSON.parse(userString).access : null;
 
@@ -115,6 +120,65 @@ export const LojaComunidade = ({ idLoja, isOwner }: LojaComunidadeProps) => {
     }
   };
 
+  // Abre o modo de edição de uma resposta já publicada
+  const iniciarEdicaoResposta = (pergunta: Pergunta) => {
+    setRespostaEditandoId(pergunta.id);
+    setTextoEdicaoResposta(pergunta.texto_resposta || "");
+  };
+
+  const cancelarEdicaoResposta = () => {
+    setRespostaEditandoId(null);
+    setTextoEdicaoResposta("");
+  };
+
+  const handleSalvarEdicaoResposta = async (idPergunta: number) => {
+    if (!textoEdicaoResposta.trim()) return;
+
+    setLoadingEdicaoResposta(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/perguntas/${idPergunta}/`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ texto_resposta: textoEdicaoResposta })
+      });
+
+      if (res.ok) {
+        setPerguntas(prev => prev.map(p => p.id === idPergunta ? { ...p, texto_resposta: textoEdicaoResposta } : p));
+        cancelarEdicaoResposta();
+      } else {
+        alert("Erro ao salvar a edição da resposta.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro de conexão.");
+    } finally {
+      setLoadingEdicaoResposta(false);
+    }
+  };
+
+  const handleRemoverPergunta = async (idPergunta: number) => {
+  if (!confirm("Deseja mesmo apagar esta pergunta?")) return;
+
+  const token = JSON.parse(localStorage.getItem("Panelinha_user") || "{}").access;
+
+  try {
+    const res = await fetch(`http://localhost:8000/api/perguntas/${idPergunta}/`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+
+    if (res.ok) {
+      // Remove a pergunta da lista filtrando pelo ID
+      setPerguntas(prev => prev.filter(p => p.id !== idPergunta));
+    }
+  } catch (err) {
+    alert("Erro ao remover pergunta.");
+  }
+};
+
   const formatarData = (dataIso: string) => {
     const data = new Date(dataIso);
     return data.toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', year: 'numeric' });
@@ -179,15 +243,54 @@ export const LojaComunidade = ({ idLoja, isOwner }: LojaComunidadeProps) => {
               {/* BLOCO DA RESPOSTA */}
               <div className="mt-4 ml-14">
                 {pergunta.texto_resposta ? (
-                  // Se já foi respondido, mostra a resposta da loja
-                  <div className="bg-[#FAF7F4] p-4 rounded-2xl rounded-tl-none border border-[#E2D8D0] relative">
-                    <div className="absolute -left-2 top-0 w-4 h-4 bg-[#FAF7F4] border-l border-t border-[#E2D8D0] transform -translate-x-1/2 -rotate-45 skew-x-12 hidden md:block"></div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-black text-[#D85A30]">Resposta da Loja</span>
-                      <span className="text-xs text-[#8C7361]">• {formatarData(pergunta.respondido_em || pergunta.criado_em)}</span>
+                  respostaEditandoId === pergunta.id ? (
+                    // MODO DE EDIÇÃO DA RESPOSTA
+                    <div>
+                      <textarea
+                        value={textoEdicaoResposta}
+                        onChange={(e) => setTextoEdicaoResposta(e.target.value)}
+                        className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-2 outline-none focus:border-[#D85A30] text-sm resize-none mb-2"
+                        rows={2}
+                        autoFocus
+                      />
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => handleSalvarEdicaoResposta(pergunta.id)}
+                          disabled={loadingEdicaoResposta || !textoEdicaoResposta.trim()}
+                          className="bg-[#D85A30] text-white text-sm font-bold px-4 py-1.5 rounded-lg hover:bg-[#C24B24] transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {loadingEdicaoResposta ? "Salvando..." : "Salvar"}
+                        </button>
+                        <button 
+                          onClick={cancelarEdicaoResposta}
+                          disabled={loadingEdicaoResposta}
+                          className="text-sm font-bold text-[#8C7361] hover:text-[#2A1F14] px-4 py-1.5 cursor-pointer disabled:opacity-50"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-[#4A3A2F] text-sm">{pergunta.texto_resposta}</p>
-                  </div>
+                  ) : (
+                    // Se já foi respondido, mostra a resposta da loja
+                    <div className="bg-[#FAF7F4] p-4 rounded-2xl rounded-tl-none border border-[#E2D8D0] relative">
+                      <div className="absolute -left-2 top-0 w-4 h-4 bg-[#FAF7F4] border-l border-t border-[#E2D8D0] transform -translate-x-1/2 -rotate-45 skew-x-12 hidden md:block"></div>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black text-[#D85A30]">Resposta da Loja</span>
+                          <span className="text-xs text-[#8C7361]">• {formatarData(pergunta.respondido_em || pergunta.criado_em)}</span>
+                        </div>
+                        {isOwner && (
+                          <button
+                            onClick={() => iniciarEdicaoResposta(pergunta)}
+                            className="text-[10px] font-bold text-[#8C7361] hover:text-[#D85A30] uppercase cursor-pointer shrink-0"
+                          >
+                            Editar
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-[#4A3A2F] text-sm">{pergunta.texto_resposta}</p>
+                    </div>
+                  )
                 ) : (
                   // Se não foi respondido ainda...
                   isOwner ? (
@@ -216,6 +319,15 @@ export const LojaComunidade = ({ idLoja, isOwner }: LojaComunidadeProps) => {
                   )
                 )}
               </div>
+
+              {isOwner && (
+                <button 
+                  onClick={() => handleRemoverPergunta(pergunta.id)}
+                  className="text-[10px] text-red-400 font-bold uppercase hover:text-red-600 cursor-pointer mt-2"
+                >
+                  Excluir Pergunta
+                </button>
+              )}
 
             </div>
           ))
