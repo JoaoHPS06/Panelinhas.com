@@ -8,6 +8,7 @@ import { CadastroLoja } from "./pages/CadastroLoja";
 import { MinhasLojas } from "./pages/MinhasLojas";
 import { Explore } from "./pages/Explore"
 import { Perfil } from "./pages/Perfil";
+import { ProdutosFavoritos } from "./pages/ProdutosFavoritos";
 
 // 1. Layout Base
 const LayoutComNavbar = () => {
@@ -63,6 +64,7 @@ function App() {
             <Route path="/cadastro-loja" element={<CadastroLoja />} />
             <Route path="/editar-loja/:id" element={<CadastroLoja />} />
             <Route path="/perfil" element={<Perfil />} />
+            <Route path="/produtos-favoritos" element={<ProdutosFavoritos/>} />
           </Route>
 
         </Routes>

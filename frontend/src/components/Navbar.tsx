@@ -41,13 +41,14 @@ export const Navbar = () => {
   // Se estiver logado, todo mundo vê o Feed e as Lojas (seguidas/criadas)
   if (isLogged) {
     links.push({ nome: "Minhas Lojas", caminho: "/minhas-lojas" });
+    links.push({ nome: "Produtos Favoritos", caminho: "/produtos-favoritos" });
   }
 
   return (
     <nav className="fixed top-14 left-1/2 -translate-x-1/2 w-[96%] max-w-7xl h-16 rounded-full flex items-center justify-between px-8 z-50 backdrop-blur-md bg-creme-suave/70 border border-marrom-rustico/10 shadow-lg">
 
       {/* Lado Esquerdo: Abas de Navegação */}
-      <div className="flex gap-6 items-center font-nunito">
+      <div className="flex gap-1 items-center font-nunito">
         {links.map((link, index) => {
           const ativo = local.pathname === link.caminho;
           return (

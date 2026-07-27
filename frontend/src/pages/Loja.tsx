@@ -91,7 +91,8 @@ export const Loja = () => {
           descricao: p.descricao || "",
           preco: parseFloat(p.preco) || 0.0,
           image: p.emoji || "📦",
-          ehNovo: verificarSeEhNovo(p.criado_em), 
+          ehNovo: verificarSeEhNovo(p.criado_em),
+          estaFavoritado: p.usuario_favoritou || false,
         })),
 
         followers: dadosBackend.total_seguidores || 0,
@@ -241,6 +242,39 @@ export const Loja = () => {
     }
   };
 
+  const handleToggleFavorito = async (idProduto: string) => {
+    if (!usuarioLogado?.access) {
+      navigate("/login");
+      return;
+    }
+
+    // Atualiza a tela na hora, sem esperar o backend
+    setLojaAtual(prev => prev ? ({
+      ...prev,
+      produtos: prev.produtos.map(p =>
+        p.id === idProduto ? { ...p, estaFavoritado: !p.estaFavoritado } : p
+      )
+    }) : prev);
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/produtos/${idProduto}/favoritar/`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${usuarioLogado.access}` }
+      });
+
+      if (!res.ok) throw new Error();
+    } catch (error) {
+      // Se der erro, desfaz a mudança visual
+      setLojaAtual(prev => prev ? ({
+        ...prev,
+        produtos: prev.produtos.map(p =>
+          p.id === idProduto ? { ...p, estaFavoritado: !p.estaFavoritado } : p
+        )
+      }) : prev);
+      alert("Erro ao favoritar produto.");
+    }
+  };
+
   if (loading) return <div className="w-full min-h-screen flex items-center justify-center bg-creme-suave"><div className="animate-spin text-4xl">⏳</div></div>;
   if (erro || !lojaAtual) return <div className="w-full min-h-screen flex flex-col items-center justify-center bg-areia/20 p-4 text-center"><span className="text-6xl mb-4">🔍</span><h1 className="text-2xl font-black text-marrom-rustico">Estabelecimento não encontrado</h1><button onClick={() => navigate("/")} className="mt-4 bg-marrom-rustico text-white font-bold px-6 py-2 rounded-full text-sm">Voltar para a Home</button></div>;
 
@@ -264,6 +298,7 @@ export const Loja = () => {
             onAddClick={abrirNovoProduto} 
             onDeleteClick={handleDeletarProduto}
             onEditClick={abrirEdicaoProduto}
+            onFavoriteClick={handleToggleFavorito}
           />
         )}
         

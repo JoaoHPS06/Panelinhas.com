@@ -8,6 +8,7 @@ export interface Produto {
   descricao: string;
   preco: number;
   ehNovo?: boolean;
+  estaFavoritado?: boolean;
 }
 
 interface LojaProdutosProps {
@@ -16,9 +17,10 @@ interface LojaProdutosProps {
   onAddClick?: () => void;                 // NOVO: Ação disparada ao clicar em "Adicionar Produto"
   onDeleteClick?: (idProduto: string) => void; // NOVO: Ação disparada ao clicar em "Excluir Produto"
   onEditClick?: (produto: Produto) => void;    // NOVO: Ação disparada ao clicar em "Editar Produto"
+  onFavoriteClick?: (idProduto: string) => void;
 }
 
-export const LojaProdutos = ({ produtos, isOwner, onAddClick, onDeleteClick, onEditClick }: LojaProdutosProps) => {
+export const LojaProdutos = ({ produtos, isOwner, onAddClick, onDeleteClick, onEditClick, onFavoriteClick }: LojaProdutosProps) => {
   return (
     <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
       
@@ -63,8 +65,10 @@ export const LojaProdutos = ({ produtos, isOwner, onAddClick, onDeleteClick, onE
               preco={produto.preco}
               ehNovo={produto.ehNovo}
               isOwner={isOwner}
+              estaFavoritado={produto.estaFavoritado}
               onDelete={() => onDeleteClick?.(produto.id)}
               onEdit={() => onEditClick?.(produto)}
+              onFavorite={() => onFavoriteClick?.(produto.id)}
             />
           ))}
         </div>

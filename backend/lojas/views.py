@@ -2,6 +2,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action 
 from rest_framework.response import Response 
+from rest_framework.permissions import IsAuthenticated
 from .models import Loja, Produto
 from .serializers import LojaSerializer, ProdutoSerializer
 from django.shortcuts import get_object_or_404
@@ -64,3 +65,26 @@ class ProdutoViewSet(viewsets.ModelViewSet):
         
         # 3. Salva o produto vinculando a essa loja exata
         serializer.save(loja=loja)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def favoritar(self, request, pk=None):
+        produto = self.get_object()
+        usuario = request.user
+
+        if produto.favoritado_por.filter(id=usuario.id).exists():
+            produto.favoritado_por.remove(usuario)
+            favoritado = False
+        else:
+            produto.favoritado_por.add(usuario)
+            favoritado = True
+
+        return Response({
+            'favoritado': favoritado,
+            'total_favoritos': produto.favoritado_por.count()
+        })
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def favoritos(self, request):
+        produtos = request.user.produtos_favoritos.all()
+        serializer = self.get_serializer(produtos, many=True, context={'request': request})
+        return Response(serializer.data)

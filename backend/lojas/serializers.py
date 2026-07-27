@@ -2,10 +2,25 @@ from rest_framework import serializers
 from .models import Loja, Produto
 
 class ProdutoSerializer(serializers.ModelSerializer):
+    usuario_favoritou = serializers.SerializerMethodField()
+    total_favoritos = serializers.SerializerMethodField()
+
     class Meta:
         model = Produto
-        fields = '__all__'
+        fields = [
+        'id', 'loja', 'nome', 'descricao', 'preco', 'emoji', 'criado_em',
+        'usuario_favoritou', 'total_favoritos'
+        ]
         read_only_fields = ['loja'] 
+
+    def get_usuario_favoritou(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.favoritado_por.filter(id=request.user.id).exists()
+        return False
+    
+    def get_total_favoritos(self, obj):
+        return obj.favoritado_por.count()
 
 class LojaSerializer(serializers.ModelSerializer):
     produtos = ProdutoSerializer(many=True, read_only=True)

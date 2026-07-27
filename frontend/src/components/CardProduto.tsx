@@ -5,11 +5,13 @@ interface CardProdutoProps {
   preco: number;
   ehNovo?: boolean; // Determina se a tag verde vai aparecer
   isOwner?: boolean;     // NOVO: mostra os botões de editar/excluir só para o dono
+  estaFavoritado?: boolean;
   onDelete?: () => void; // NOVO: ação disparada ao clicar em excluir
   onEdit?: () => void;   // NOVO: ação disparada ao clicar em editar
+  onFavorite?: () => void;
 }
 
-export const CardProduto = ({ image, nome, descricao, preco, ehNovo, isOwner, onDelete, onEdit }: CardProdutoProps) => {
+export const CardProduto = ({ image, nome, descricao, preco, ehNovo, isOwner, estaFavoritado, onDelete, onEdit, onFavorite }: CardProdutoProps) => {
   return (
     <div 
       onMouseMove={(e) => typeof window !== 'undefined' && (window as any).tilt?.(e.nativeEvent, e.currentTarget)} 
@@ -57,6 +59,19 @@ export const CardProduto = ({ image, nome, descricao, preco, ehNovo, isOwner, on
         <div className="p-3 pb-0">
           <div className="h-36 bg-linear-to-br from-areia to-amarelo-mostarda/40 rounded-xl flex items-center justify-center text-6xl relative overflow-hidden transition-transform duration-300 group-hover:scale-105">
             {image}
+            {onFavorite && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFavorite();
+                }}
+                title={estaFavoritado ? "Remover dos favoritos" : "Adicionar aos favoritos"}
+                className="absolute top-2 right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 transition-transform cursor-pointer text-base"
+              >
+                {estaFavoritado ? "❤️" : "🤍"}
+              </button>
+            )}
           </div>
         </div>
 

@@ -46,5 +46,11 @@ class Produto(models.Model):
     
     criado_em = models.DateTimeField(auto_now_add=True)
 
+    favoritado_por = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name='produtos_favoritos',
+        blank=True
+    )
+
     def __str__(self):
         return f"{self.nome} ({self.loja.nome})"
