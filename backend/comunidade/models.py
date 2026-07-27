@@ -51,6 +51,9 @@ class Avaliacao(models.Model):
     comentario = models.TextField()
     criado_em = models.DateTimeField(auto_now_add=True)
 
+    resposta_dono = models.TextField(blank=True, null=True)
+    respondido_em = models.DateTimeField(blank=True, null=True)
+
     class Meta:
         # Garante que um usuário só possa avaliar a mesma loja uma única vez
         unique_together = ('loja', 'usuario')

@@ -107,6 +107,24 @@ class AvaliacaoViewSet(viewsets.ModelViewSet):
         if loja_id:
             queryset = queryset.filter(loja_id=loja_id)
         return queryset
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def responder(self, request, pk=None):
+        avaliacao = self.get_object()
+
+        # Só o dono da loja avaliada pode responder
+        if avaliacao.loja.dono != request.user:
+            raise PermissionDenied("Acesso negado. Apenas o dono da loja pode responder a esta avaliação.")
+
+        resposta = request.data.get('resposta_dono', '').strip()
+        if not resposta:
+            return Response({"detail": "O campo 'resposta_dono' é obrigatório."}, status=400)
+
+        avaliacao.resposta_dono = resposta
+        avaliacao.respondido_em = timezone.now()
+        avaliacao.save()
+
+        serializer = self.get_serializer(avaliacao)
+        return Response(serializer.data)
 
 
 class PerguntaViewSet(viewsets.ModelViewSet):

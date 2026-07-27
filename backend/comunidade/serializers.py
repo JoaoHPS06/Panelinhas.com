@@ -33,8 +33,9 @@ class AvaliacaoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Avaliacao
-        fields = ['id', 'loja', 'usuario', 'nome_usuario', 'nota', 'comentario', 'criado_em']
-        read_only_fields = ['usuario', 'criado_em']
+        fields = ['id', 'loja', 'usuario', 'nome_usuario', 'nota', 'comentario', 'criado_em',
+            'resposta_dono', 'respondido_em']
+        read_only_fields = ['usuario', 'criado_em', 'resposta_dono', 'respondido_em']
 
 
 class PerguntaSerializer(serializers.ModelSerializer):

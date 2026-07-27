@@ -121,9 +121,6 @@ export const ProdutosFavoritos = () => {
           >
             Produtos Favoritos
           </h1>
-          <p className="text-[#6B5040] text-sm mt-1">
-            Os itens que você guardou para não perder de vista.
-          </p>
         </div>
 
         <div className="shrink-0">
@@ -184,7 +181,7 @@ export const ProdutosFavoritos = () => {
               <span className="text-3xl bg-creme-suave p-3 rounded-xl">💰</span>
               <div>
                 <p className="text-xs font-bold uppercase text-marrom-rustico/50 tracking-wider">
-                  Valor total estimado
+                  Valor total
                 </p>
                 <p className="text-2xl font-black text-cafe-expresso">
                   {formatarPreco(valorTotal)}
@@ -200,10 +197,6 @@ export const ProdutosFavoritos = () => {
                 <h3 className="text-lg font-bold text-[#2A1F14] mb-1">
                   Você ainda não favoritou nenhum produto
                 </h3>
-                <p className="text-[#6B5040] text-sm mb-6 max-w-sm">
-                  Explore as lojas da rua e clique no coração dos produtos que
-                  você quiser guardar para depois.
-                </p>
                 <BotaoPrincipal texto="Explorar a rua" onClick={() => navigate("/explore")} />
               </div>
             ) : (

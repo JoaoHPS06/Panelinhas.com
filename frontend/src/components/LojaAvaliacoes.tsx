@@ -8,17 +8,18 @@ interface LojaAvaliacoesProps {
 interface Avaliacao {
   id: number;
   nome_usuario: string;
-  usuario?: number; // ID de quem avaliou — necessário pra saber se é o dono da avaliação
+  usuario?: number;
   nota: number;
   comentario: string;
   criado_em: string;
+  resposta_dono: string | null;    // NOVO
+  respondido_em: string | null;    // NOVO
 }
 
 export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [loadingAvaliacoes, setLoadingAvaliacoes] = useState(true);
 
-  // Estados para o formulário de nova avaliação
   const [nota, setNota] = useState<number>(0);
   const [hoverNota, setHoverNota] = useState<number>(0);
   const [comentario, setComentario] = useState("");
@@ -27,7 +28,6 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
   const userString = localStorage.getItem("Panelinha_user");
   const token = userString ? JSON.parse(userString).access : null;
 
-  // Descobre o ID do usuário logado (mesmo padrão usado em Loja.tsx para isOwner)
   let loggedInUserId: number | string | null = null;
   if (token) {
     try {
@@ -39,12 +39,16 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
     }
   }
 
-  // Estados para edição de uma avaliação já publicada
   const [avaliacaoEditandoId, setAvaliacaoEditandoId] = useState<number | null>(null);
   const [notaEdicao, setNotaEdicao] = useState<number>(0);
   const [hoverNotaEdicao, setHoverNotaEdicao] = useState<number>(0);
   const [comentarioEdicao, setComentarioEdicao] = useState("");
   const [loadingEdicaoAvaliacao, setLoadingEdicaoAvaliacao] = useState(false);
+
+  // NOVO: estados para o dono responder uma avaliação
+  const [respondendoId, setRespondendoId] = useState<number | null>(null);
+  const [textoResposta, setTextoResposta] = useState("");
+  const [loadingResposta, setLoadingResposta] = useState(false);
 
   const buscarAvaliacoes = async () => {
     try {
@@ -83,21 +87,15 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({
-          loja: idLoja,
-          nota: nota,
-          comentario: comentario
-        })
+        body: JSON.stringify({ loja: idLoja, nota: nota, comentario: comentario })
       });
 
       if (res.ok) {
         setNota(0);
         setComentario("");
-        buscarAvaliacoes(); // Atualiza a lista
+        buscarAvaliacoes();
       } else {
         const errorData = await res.json();
-        // O Django pode retornar erro se o usuário for dono de loja (como configuramos no views.py) 
-        // ou se já tiver avaliado essa loja (unique_together no models.py)
         alert(errorData.detail || errorData.non_field_errors?.[0] || "Erro ao enviar avaliação.");
       }
     } catch (err) {
@@ -107,7 +105,6 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
     }
   };
 
-  // Abre o modo de edição preenchendo a nota e o comentário atuais
   const iniciarEdicaoAvaliacao = (av: Avaliacao) => {
     setAvaliacaoEditandoId(av.id);
     setNotaEdicao(av.nota);
@@ -170,13 +167,57 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
     }
   };
 
+  // NOVO: abre a caixa de resposta do dono (preenchendo se já existir uma resposta)
+  const iniciarResposta = (av: Avaliacao) => {
+    setRespondendoId(av.id);
+    setTextoResposta(av.resposta_dono || "");
+  };
+
+  const cancelarResposta = () => {
+    setRespondendoId(null);
+    setTextoResposta("");
+  };
+
+  const handleEnviarResposta = async (idAvaliacao: number) => {
+    if (!textoResposta.trim()) return;
+
+    setLoadingResposta(true);
+    try {
+      const res = await fetch(`http://localhost:8000/api/avaliacoes/${idAvaliacao}/responder/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ resposta_dono: textoResposta })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setAvaliacoes(prev => prev.map(av =>
+          av.id === idAvaliacao
+            ? { ...av, resposta_dono: data.resposta_dono, respondido_em: data.respondido_em }
+            : av
+        ));
+        cancelarResposta();
+      } else {
+        const errorData = await res.json();
+        alert(errorData.detail || "Erro ao enviar resposta.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro de conexão.");
+    } finally {
+      setLoadingResposta(false);
+    }
+  };
+
   const formatarData = (dataIso: string) => {
     const data = new Date(dataIso);
     return data.toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', year: 'numeric' });
   };
 
-  // Calcula a média visual rapidamente
-  const media = avaliacoes.length > 0 
+  const media = avaliacoes.length > 0
     ? (avaliacoes.reduce((acc, curr) => acc + curr.nota, 0) / avaliacoes.length).toFixed(1)
     : "0.0";
 
@@ -184,8 +225,7 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
 
   return (
     <div className="max-w-3xl mx-auto py-8 px-4">
-      
-      {/* CABEÇALHO DE RESUMO DAS AVALIAÇÕES */}
+
       <div className="flex items-center gap-6 mb-10 bg-white rounded-3xl p-6 shadow-sm border border-[#E2D8D0]">
         <div className="flex flex-col items-center justify-center bg-[#FAF7F4] w-32 h-32 rounded-2xl border border-[#E2D8D0]">
           <span className="text-4xl font-black text-[#2A1F14]">{media}</span>
@@ -200,12 +240,9 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
         </div>
       </div>
 
-      {/* FORMULÁRIO DE AVALIAÇÃO (Apenas para Clientes) */}
       {!isOwner && (
         <form onSubmit={handleAvaliar} className="bg-white rounded-3xl p-6 shadow-sm border border-[#E2D8D0] mb-10 transition-all focus-within:border-[#D85A30]">
           <h3 className="font-black text-lg text-[#2A1F14] mb-4">Deixe sua avaliação</h3>
-          
-          {/* Seletor de Estrelas Interativo */}
           <div className="flex gap-1 mb-4">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -232,9 +269,9 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
             className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-3 outline-none focus:border-[#D85A30] resize-none h-24 mb-3 text-[#4A3A2F]"
             required
           />
-          
+
           <div className="flex justify-end">
-            <button 
+            <button
               type="submit"
               disabled={loadingEnvio}
               className="bg-[#2A1F14] text-white font-bold px-8 py-2.5 rounded-xl hover:bg-[#4A3A2F] transition-colors disabled:opacity-50 cursor-pointer"
@@ -245,7 +282,6 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
         </form>
       )}
 
-      {/* LISTA DE AVALIAÇÕES */}
       <div className="space-y-4">
         {avaliacoes.length === 0 ? (
           <div className="text-center py-8 text-[#8C7361]">
@@ -271,7 +307,6 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
                       {"★".repeat(av.nota)}{"☆".repeat(5 - av.nota)}
                     </div>
                   )}
-                  {/* Só quem escreveu a avaliação pode editá-la ou excluí-la */}
                   {loggedInUserId != null && av.usuario != null && String(av.usuario) === String(loggedInUserId) && avaliacaoEditandoId !== av.id && (
                     <div className="flex items-center gap-2 shrink-0">
                       <button
@@ -292,7 +327,6 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
               </div>
 
               {avaliacaoEditandoId === av.id ? (
-                // MODO DE EDIÇÃO
                 <div>
                   <div className="flex gap-1 mb-3">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -333,6 +367,70 @@ export const LojaAvaliacoes = ({ idLoja, isOwner }: LojaAvaliacoesProps) => {
                 </div>
               ) : (
                 <p className="text-[#4A3A2F]">{av.comentario}</p>
+              )}
+
+              {/* RESPOSTA DO DONO — exibida se já existir */}
+              {av.resposta_dono && respondendoId !== av.id && (
+                <div className="mt-4 ml-4 pl-4 border-l-2 border-[#D85A30]/30 bg-[#FAF7F4] rounded-r-xl rounded-bl-xl p-4">
+                  <div className="flex items-center justify-between gap-3 mb-1.5">
+                    <span className="text-xs font-black text-[#D85A30] uppercase tracking-wide">
+                      Resposta do estabelecimento
+                    </span>
+                    {isOwner && (
+                      <button
+                        onClick={() => iniciarResposta(av)}
+                        className="text-xs font-bold text-[#8C7361] hover:text-[#D85A30] uppercase cursor-pointer"
+                      >
+                        Editar resposta
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-sm text-[#4A3A2F]">{av.resposta_dono}</p>
+                  {av.respondido_em && (
+                    <span className="text-xs text-[#8C7361] mt-1.5 block">{formatarData(av.respondido_em)}</span>
+                  )}
+                </div>
+              )}
+
+              {/* BOTÃO "RESPONDER" — só pro dono, quando ainda não respondeu */}
+              {isOwner && !av.resposta_dono && respondendoId !== av.id && (
+                <div className="mt-4">
+                  <button
+                    onClick={() => iniciarResposta(av)}
+                    className="text-xs font-bold text-[#D85A30] hover:text-[#BF4A22] uppercase tracking-wide cursor-pointer"
+                  >
+                    ↳ Responder como dono
+                  </button>
+                </div>
+              )}
+
+              {/* CAIXA DE RESPOSTA — modo de edição/criação */}
+              {respondendoId === av.id && (
+                <div className="mt-4 ml-4 pl-4 border-l-2 border-[#D85A30]/30">
+                  <textarea
+                    value={textoResposta}
+                    onChange={(e) => setTextoResposta(e.target.value)}
+                    placeholder="Escreva uma resposta pública para esta avaliação..."
+                    className="w-full bg-[#FAF7F4] border border-[#E2D8D0] rounded-xl px-4 py-3 outline-none focus:border-[#D85A30] resize-none h-20 text-[#4A3A2F] text-sm"
+                    autoFocus
+                  />
+                  <div className="flex justify-end gap-3 mt-3">
+                    <button
+                      onClick={cancelarResposta}
+                      disabled={loadingResposta}
+                      className="text-sm font-bold text-[#8C7361] hover:text-[#2A1F14] px-4 py-2 cursor-pointer disabled:opacity-50"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={() => handleEnviarResposta(av.id)}
+                      disabled={loadingResposta || !textoResposta.trim()}
+                      className="bg-[#D85A30] text-white font-bold px-6 py-2 rounded-xl hover:bg-[#BF4A22] transition-colors disabled:opacity-50 cursor-pointer"
+                    >
+                      {loadingResposta ? "Enviando..." : "Enviar Resposta"}
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           ))
