@@ -12,6 +12,9 @@ interface Post {
   titulo: string;
   conteudo: string;
   criado_em: string;
+  total_likes: number;
+  total_dislikes: number;
+  reacao_usuario: "like" | "dislike" | null;
 }
 
 export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
@@ -25,9 +28,22 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
   const [textoEdicao, setTextoEdicao] = useState("");
   const [loadingEdicao, setLoadingEdicao] = useState(false);
 
+  // IDs de posts com reação em andamento, pra desabilitar o botão durante a requisição
+  const [reagindoIds, setReagindoIds] = useState<number[]>([]);
+
+  const getToken = () => {
+    const userString = localStorage.getItem("Panelinha_user");
+    return userString ? JSON.parse(userString).access : null;
+  };
+
   const buscarPosts = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/posts/?loja=${idLoja}`);
+      const token = getToken();
+      const headers: any = {};
+      // Manda o token quando existir, pra API saber calcular "reacao_usuario" certo
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch(`http://localhost:8000/api/posts/?loja=${idLoja}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setPosts(data);
@@ -47,8 +63,7 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
     if (!novoTexto.trim()) return;
     setLoading(true);
 
-    const userString = localStorage.getItem("Panelinha_user");
-    const token = userString ? JSON.parse(userString).access : null;
+    const token = getToken();
 
     try {
       const res = await fetch("http://localhost:8000/api/posts/", {
@@ -59,14 +74,14 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
         },
         body: JSON.stringify({
           loja: idLoja,
-          titulo: "Atualização da Loja", // Título padrão, já que o design tem apenas um campo de texto
+          titulo: "Atualização da Loja",
           conteudo: novoTexto
         })
       });
 
       if (res.ok) {
         setNovoTexto("");
-        buscarPosts(); // Recarrega os posts atualizados
+        buscarPosts();
       } else {
         alert("Erro ao publicar postagem.");
       }
@@ -83,7 +98,6 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
     return data.toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' });
   };
 
-  // Abre o modo de edição preenchendo o texto atual do post
   const iniciarEdicao = (post: Post) => {
     setPostEditandoId(post.id);
     setTextoEdicao(post.conteudo);
@@ -97,8 +111,7 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
   const handleSalvarEdicao = async (idPost: number) => {
     if (!textoEdicao.trim()) return;
 
-    const userString = localStorage.getItem("Panelinha_user");
-    const token = userString ? JSON.parse(userString).access : null;
+    const token = getToken();
 
     setLoadingEdicao(true);
     try {
@@ -128,8 +141,7 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
   const handleDeletarPost = async (idPost: number) => {
     if (!confirm("Tem certeza que deseja excluir esta publicação?")) return;
 
-    const userString = localStorage.getItem("Panelinha_user");
-    const token = userString ? JSON.parse(userString).access : null;
+    const token = getToken();
 
     try {
       const res = await fetch(`http://localhost:8000/api/posts/${idPost}/`, {
@@ -146,6 +158,77 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
     } catch (err) {
       console.error(err);
       alert("Erro de conexão.");
+    }
+  };
+
+  // NOVO: curtir ou descurtir um post
+  const handleReagir = async (idPost: number, tipo: "like" | "dislike") => {
+    const token = getToken();
+    if (!token) {
+      alert("Você precisa estar logado para reagir a uma publicação.");
+      return;
+    }
+
+    if (reagindoIds.includes(idPost)) return; // evita clique duplo
+    setReagindoIds(prev => [...prev, idPost]);
+
+    // Guarda o estado anterior pra poder desfazer se der erro
+    const postAnterior = posts.find(p => p.id === idPost);
+
+    // Atualização otimista: já reflete a mudança na tela antes da resposta do backend
+    setPosts(prev => prev.map(p => {
+      if (p.id !== idPost) return p;
+
+      const jaTinhaEssaReacao = p.reacao_usuario === tipo;
+      let novoTotalLikes = p.total_likes;
+      let novoTotalDislikes = p.total_dislikes;
+
+      // Remove o efeito da reação anterior (se havia)
+      if (p.reacao_usuario === "like") novoTotalLikes -= 1;
+      if (p.reacao_usuario === "dislike") novoTotalDislikes -= 1;
+
+      // Aplica a nova reação, exceto se for a mesma (toggle off)
+      if (!jaTinhaEssaReacao) {
+        if (tipo === "like") novoTotalLikes += 1;
+        if (tipo === "dislike") novoTotalDislikes += 1;
+      }
+
+      return {
+        ...p,
+        reacao_usuario: jaTinhaEssaReacao ? null : tipo,
+        total_likes: novoTotalLikes,
+        total_dislikes: novoTotalDislikes,
+      };
+    }));
+
+    try {
+      const res = await fetch(`http://localhost:8000/api/posts/${idPost}/reagir/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ tipo })
+      });
+
+      if (!res.ok) throw new Error();
+
+      // Sincroniza com a resposta real do backend (fonte da verdade)
+      const data = await res.json();
+      setPosts(prev => prev.map(p =>
+        p.id === idPost
+          ? { ...p, reacao_usuario: data.reacao_usuario, total_likes: data.total_likes, total_dislikes: data.total_dislikes }
+          : p
+      ));
+    } catch (err) {
+      console.error(err);
+      // Desfaz a mudança visual se a requisição falhar
+      if (postAnterior) {
+        setPosts(prev => prev.map(p => p.id === idPost ? postAnterior : p));
+      }
+      alert("Erro ao registrar sua reação.");
+    } finally {
+      setReagindoIds(prev => prev.filter(id => id !== idPost));
     }
   };
 
@@ -205,7 +288,6 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
                   </div>
                 </div>
 
-                {/* AÇÕES DO DONO — só aparecem fora do modo de edição */}
                 {isOwner && postEditandoId !== post.id && (
                   <div className="flex items-center gap-3 shrink-0">
                     <button
@@ -225,7 +307,6 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
               </div>
 
               {postEditandoId === post.id ? (
-                // MODO DE EDIÇÃO
                 <div>
                   <textarea
                     value={textoEdicao}
@@ -251,7 +332,37 @@ export const LojaPosts = ({ idLoja, isOwner, loja }: LojaPostsProps) => {
                   </div>
                 </div>
               ) : (
-                <p className="text-[#4A3A2F] whitespace-pre-wrap">{post.conteudo}</p>
+                <>
+                  <p className="text-[#4A3A2F] whitespace-pre-wrap">{post.conteudo}</p>
+
+                  {/* BOTÕES DE LIKE / DISLIKE */}
+                  <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[#F3E5D8]">
+                    <button
+                      type="button"
+                      onClick={() => handleReagir(post.id, "like")}
+                      disabled={reagindoIds.includes(post.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-colors cursor-pointer disabled:opacity-50 ${
+                        post.reacao_usuario === "like"
+                          ? "bg-verde-salvia/15 text-verde-salvia"
+                          : "text-[#8C7361] hover:bg-[#FAF7F4]"
+                      }`}
+                    >
+                      👍 {post.total_likes}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleReagir(post.id, "dislike")}
+                      disabled={reagindoIds.includes(post.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold transition-colors cursor-pointer disabled:opacity-50 ${
+                        post.reacao_usuario === "dislike"
+                          ? "bg-vermelho-pimenta/15 text-vermelho-pimenta"
+                          : "text-[#8C7361] hover:bg-[#FAF7F4]"
+                      }`}
+                    >
+                      👎 {post.total_dislikes}
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           ))

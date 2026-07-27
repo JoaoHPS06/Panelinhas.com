@@ -17,7 +17,30 @@ class Post(models.Model):
     # Retorna o título do post
     def __str__(self):
         return f"{self.titulo} ({self.loja.nome})"
-    
+
+
+class PostReacao(models.Model):
+    """Like ou dislike de um usuário em um post. Um usuário só pode ter uma reação por post."""
+    LIKE = 'like'
+    DISLIKE = 'dislike'
+    TIPO_CHOICES = [
+        (LIKE, 'Like'),
+        (DISLIKE, 'Dislike'),
+    ]
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='reacoes')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reacoes_posts')
+    tipo = models.CharField(max_length=7, choices=TIPO_CHOICES)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # Garante que um usuário só tenha UMA reação (like OU dislike) por post
+        unique_together = ('post', 'usuario')
+
+    def __str__(self):
+        return f"{self.usuario.username} {self.tipo} em '{self.post.titulo}'"
+
+
 class Avaliacao(models.Model):
     """Avaliações de 1 a 5 estrelas deixadas por usuários cadastrados"""
     loja = models.ForeignKey(Loja, on_delete=models.CASCADE, related_name='avaliacoes')

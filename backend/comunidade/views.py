@@ -1,8 +1,11 @@
 from django.shortcuts import render
 from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
-from .models import Post, Avaliacao, Pergunta
+from .models import Post, PostReacao, Avaliacao, Pergunta
 from .serializers import PostSerializer, AvaliacaoSerializer, PerguntaSerializer
 from django.shortcuts import get_object_or_404
 from lojas.models import Loja 
@@ -38,6 +41,40 @@ class PostViewSet(viewsets.ModelViewSet):
         if loja_id:
             queryset = queryset.filter(loja_id=loja_id).order_by('-criado_em')
         return queryset
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def reagir(self, request, pk=None):
+        post = self.get_object()
+        usuario = request.user
+        tipo = request.data.get('tipo')  # 'like' ou 'dislike'
+
+        if tipo not in [PostReacao.LIKE, PostReacao.DISLIKE]:
+            return Response(
+                {"detail": "O campo 'tipo' deve ser 'like' ou 'dislike'."},
+                status=400
+            )
+
+        reacao_existente = PostReacao.objects.filter(post=post, usuario=usuario).first()
+
+        if reacao_existente:
+            if reacao_existente.tipo == tipo:
+                # Clicou de novo no mesmo botão → remove a reação (toggle off)
+                reacao_existente.delete()
+                reacao_atual = None
+            else:
+                # Estava como like e clicou em dislike (ou vice-versa) → troca
+                reacao_existente.tipo = tipo
+                reacao_existente.save()
+                reacao_atual = tipo
+        else:
+            PostReacao.objects.create(post=post, usuario=usuario, tipo=tipo)
+            reacao_atual = tipo
+
+        return Response({
+            'reacao_usuario': reacao_atual,
+            'total_likes': post.reacoes.filter(tipo=PostReacao.LIKE).count(),
+            'total_dislikes': post.reacoes.filter(tipo=PostReacao.DISLIKE).count(),
+        })
 
 
 class AvaliacaoViewSet(viewsets.ModelViewSet):
