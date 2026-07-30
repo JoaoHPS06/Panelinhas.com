@@ -1,4 +1,4 @@
-# 🍳 Panelinhas.com
+# <img width="200" height="200" alt="logo (1)" src="https://github.com/user-attachments/assets/ab4ac99e-0585-4f6f-a27f-739ed5036b81" /> Panelinhas.com
 
 > Plataforma de comunidade para lojas locais — descubra, siga e interaja com os seus estabelecimentos favoritos.
 ---
