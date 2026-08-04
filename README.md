@@ -9,6 +9,8 @@ O **Panelinhas.com** nasceu da ideia de unir o melhor de um marketplace de lojas
 
 Qualquer visitante pode navegar pelas lojas, ver produtos e ler publicações sem precisar criar uma conta. Quem se cadastra pode seguir lojas, deixar avaliações e participar das comunidades. Donos de loja têm um painel completo para gerenciar seu espaço, publicar ofertas e novidades, cadastrar produtos e responder aos clientes.
 
+Para visualizar as interfaces do site, clique aqui: https://github.com/JoaoHPS06/Panelinhas.com/blob/main/Interfaces.pdf
+
 ---
 
 ## 📋 Descrição geral do sistema
